@@ -92,5 +92,65 @@ const DatabaseEngine = {
             console.error("Error deleting vignette:", err);
             throw err;
         }
+    },
+    // --- Insurance Module ---
+    
+    getInsurances: async () => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('insurances')
+                .select('*')
+                .order('expiration_date', { ascending: true });
+            
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error("Error fetching insurances:", err);
+            throw err;
+        }
+    },
+
+    addInsurance: async (payload) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('insurances')
+                .insert([payload]);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error adding insurance:", err);
+            throw err;
+        }
+    },
+
+    updateInsurance: async (id, payload) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('insurances')
+                .update(payload)
+                .eq('id', id);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error updating insurance:", err);
+            throw err;
+        }
+    },
+
+    deleteInsurance: async (id) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('insurances')
+                .delete()
+                .eq('id', id);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error deleting insurance:", err);
+            throw err;
+        }
     }
 };
