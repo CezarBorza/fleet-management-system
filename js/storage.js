@@ -46,6 +46,51 @@ const DatabaseEngine = {
             console.error("Error fetching vehicles:", err);
             return [];
         }
+    },
+    
+    // --- Vignettes Module ---
+    getVignettes: async () => {
+        try {
+            // CORECTAT: Folosim expiration_date pentru sortare
+            const { data, error } = await supabaseClient.from('vignettes').select('*').order('expiration_date', { ascending: true });
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error("Error fetching vignettes:", err);
+            throw err;
+        }
+    },
+
+    addVignette: async (payload) => {
+        try {
+            const { data, error } = await supabaseClient.from('vignettes').insert([payload]);
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error adding vignette:", err);
+            throw err;
+        }
+    },
+
+    updateVignette: async (id, payload) => {
+        try {
+            const { data, error } = await supabaseClient.from('vignettes').update(payload).eq('id', id);
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error updating vignette:", err);
+            throw err;
+        }
+    },
+
+    deleteVignette: async (id) => {
+        try {
+            const { data, error } = await supabaseClient.from('vignettes').delete().eq('id', id);
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error deleting vignette:", err);
+            throw err;
+        }
     }
-    // Your teammates can add the functions for the remaining modules here
 };
