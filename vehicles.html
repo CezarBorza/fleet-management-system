@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Vehicle Management - AutoFleet System">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>Vehicles - AutoFleet Management</title>
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        .module-card {
+            background-color: var(--bg-surface, #ffffff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .toolbar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text-muted, #6b7280);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .badge-warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .badge-archived {
+            background-color: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-view {
+            color: #10b981;
+        }
+
+        .btn-view:hover {
+            color: #059669;
+        }
+
+        .btn-edit {
+            color: #3b82f6;
+        }
+
+        .btn-edit:hover {
+            color: #2563eb;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+        }
+
+        .btn-delete:hover {
+            color: #dc2626;
+        }
+
+        .error-message {
+            display: none;
+            color: var(--brand-danger, #ef4444);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+    <div class="sidebar-header">
+        <h2><i class="fa-solid fa-car-rear"></i> AutoFleet</h2>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Main Navigation">
+        <a href="dashboard.html">
+            <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </a>
+
+        <a href="vehicles.html" class="active" aria-current="page">
+            <i class="fa-solid fa-car"></i> Vehicles
+        </a>
+
+        <a href="drivers.html">
+            <i class="fa-solid fa-users"></i> Drivers
+        </a>
+
+        <a href="maintenance.html">
+            <i class="fa-solid fa-wrench"></i> Maintenance
+        </a>
+
+        <a href="insurance.html">
+            <i class="fa-solid fa-file-shield"></i> Insurance
+        </a>
+
+        <a href="vignette.html">
+            <i class="fa-solid fa-ticket"></i> Vignettes
+        </a>
+
+        <a href="tires.html">
+            <i class="fa-solid fa-circle-dot"></i> Tires
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="index.html" class="logout-link">
+            <i class="fa-solid fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+</aside>
+
+<div class="main-wrapper">
+
+    <header class="top-navbar">
+        <button id="btn-toggle-menu" class="btn-icon" aria-label="Open sidebar menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="navbar-actions">
+            <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle dark mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <button class="user-profile">
+                <i class="fa-solid fa-user-circle"></i>
+                <span>System Admin</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="page-content" id="main-content">
+
+        <header class="content-header">
+            <h1>Vehicle Management</h1>
+            <p class="text-muted">
+                Manage fleet vehicles, statuses, and vehicle information.
+            </p>
+        </header>
+
+        <!-- VEHICLE FORM -->
+        <section class="module-card">
+
+            <h2 class="card-header" id="form-title">
+                Add New Vehicle
+            </h2>
+
+            <form id="vehicle-form" novalidate>
+
+                <input type="hidden" id="vehicle-id">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="registration-number">
+                            Registration Number
+                            <span style="color: var(--brand-danger);">*</span>
+                        </label>
+
+                        <input type="text"
+                               id="registration-number"
+                               class="form-control"
+                               placeholder="e.g. HD-20-ABC"
+                               required>
+
+                        <span class="error-message" id="err-registration">
+                                Registration number is required.
+                            </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+
+                        <input type="text"
+                               id="brand"
+                               class="form-control"
+                               placeholder="e.g. BMW">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="model">Model</label>
+
+                        <input type="text"
+                               id="model"
+                               class="form-control"
+                               placeholder="e.g. X5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year">
+                            Year
+                        </label>
+
+                        <input type="number"
+                               id="year"
+                               class="form-control"
+                               min="1990"
+                               max="2026"
+                               placeholder="2022">
+
+                        <span class="error-message" id="err-year">
+                                Year must be between 1990 and 2026.
+                            </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mileage">
+                            Mileage
+                        </label>
+
+                        <input type="number"
+                               id="mileage"
+                               class="form-control"
+                               min="1"
+                               placeholder="45000">
+
+                        <span class="error-message" id="err-mileage">
+                                Mileage must be positive.
+                            </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vin">
+                            VIN
+                        </label>
+
+                        <input type="text"
+                               id="vin"
+                               class="form-control"
+                               placeholder="Minimum 10 characters">
+
+                        <span class="error-message" id="err-vin">
+                                VIN must contain at least 10 characters.
+                            </span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fuel-type">
+                            Fuel Type
+                        </label>
+
+                        <select id="fuel-type" class="form-control">
+                            <option value="">Select fuel type...</option>
+                            <option>Petrol</option>
+                            <option>Diesel</option>
+                            <option>Hybrid</option>
+                            <option>Electric</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">
+                            Status
+                        </label>
+
+                        <select id="status" class="form-control">
+                            <option value="">Select status...</option>
+                            <option>Activ</option>
+                            <option>În service</option>
+                            <option>Indisponibil</option>
+                            <option>Arhivat</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">
+                            Color
+                        </label>
+
+                        <input type="text"
+                               id="color"
+                               class="form-control"
+                               placeholder="e.g. Black">
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button type="button"
+                            id="btn-cancel"
+                            class="btn"
+                            style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color);">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            id="btn-save"
+                            class="btn">
+                        Save Vehicle
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- SEARCH & FILTER -->
+        <section class="module-card">
+
+            <h2 class="card-header">
+                Search & Filter
+            </h2>
+
+            <div class="toolbar">
+
+                <input type="text"
+                       class="form-control"
+                       placeholder="Search vehicle...">
+
+                <select class="form-control">
+                    <option value="">Filter by Status</option>
+                    <option>Activ</option>
+                    <option>În service</option>
+                    <option>Indisponibil</option>
+                    <option>Arhivat</option>
+                </select>
+
+                <select class="form-control">
+                    <option value="">Filter by Fuel Type</option>
+                    <option>Petrol</option>
+                    <option>Diesel</option>
+                    <option>Hybrid</option>
+                    <option>Electric</option>
+                </select>
+
+            </div>
+
+        </section>
+
+        <!-- VEHICLES TABLE -->
+        <section class="module-card">
+
+            <h2 class="card-header">
+                Fleet Vehicles
+            </h2>
+
+            <div class="table-responsive">
+
+                <table class="data-table">
+
+                    <thead>
+                    <tr>
+                        <th>Registration</th>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Year</th>
+                        <th>Mileage</th>
+                        <th>Fuel</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody id="vehicles-table-body">
+
+                    <tr>
+                        <td>HD-20-ABC</td>
+                        <td>BMW</td>
+                        <td>X5</td>
+                        <td>2022</td>
+                        <td>45,000 km</td>
+                        <td>Diesel</td>
+
+                        <td>
+                                    <span class="badge badge-success">
+                                        Activ
+                                    </span>
+                        </td>
+
+                        <td>
+
+                            <button class="action-btn btn-view"
+                                    title="View Details">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            <button class="action-btn btn-edit"
+                                    title="Edit Vehicle">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+
+                            <button class="action-btn btn-delete"
+                                    title="Delete Vehicle"
+                                    onclick="confirm('Sigur doriți să ștergeți vehiculul?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+
+                        </td>
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script src="js/vehicles.js"></script>
+
+</body>
+</html>
