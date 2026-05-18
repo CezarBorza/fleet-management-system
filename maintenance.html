@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Vehicle Maintenance Management - AutoFleet System">
+    <meta name="theme-color" content="#ffffff">
+    
+    <title>Maintenance - AutoFleet Management</title>
+    
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        .module-card {
+            background-color: var(--bg-surface, #ffffff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* Form Grid Layout */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Error messages */
+        .error-message {
+            display: none;
+            color: var(--brand-danger, #ef4444);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        /* Data Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text-muted, #6b7280);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .notes-column {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .badge-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .badge-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+
+        /* Action Buttons */
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .btn-edit { color: #3b82f6; }
+        .btn-edit:hover { color: #2563eb; }
+        .btn-delete { color: #ef4444; }
+        .btn-delete:hover { color: #dc2626; }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-car-rear" aria-hidden="true"></i> AutoFleet</h2>
+        </div>
+        
+        <nav class="sidebar-nav" aria-label="Main Navigation">
+            <a href="dashboard.html">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Dashboard
+            </a>
+            <a href="vehicles.html">
+                <i class="fa-solid fa-car" aria-hidden="true"></i> Vehicles
+            </a>
+            <a href="drivers.html">
+                <i class="fa-solid fa-users" aria-hidden="true"></i> Drivers
+            </a>
+            <a href="maintenance.html" class="active" aria-current="page">
+                <i class="fa-solid fa-wrench" aria-hidden="true"></i> Maintenance
+            </a>
+            <a href="insurance.html">
+                <i class="fa-solid fa-file-shield" aria-hidden="true"></i> Insurance
+            </a>
+            <a href="vignette.html">
+                <i class="fa-solid fa-ticket" aria-hidden="true"></i> Vignettes
+            </a>
+            <a href="tires.html">
+                <i class="fa-solid fa-circle-dot" aria-hidden="true"></i> Tires
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="index.html" class="logout-link" aria-label="Log out of the application">
+                <i class="fa-solid fa-sign-out-alt" aria-hidden="true"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-navbar">
+            <button id="btn-toggle-menu" class="btn-icon" aria-label="Open sidebar menu">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            
+            <div class="navbar-actions">
+                <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+                <button class="user-profile" aria-label="User profile options">
+                    <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
+                    <span>System Admin</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="page-content" id="main-content" role="main">
+            
+            <header class="content-header">
+                <h1>Maintenance & Service</h1> 
+                <p class="text-muted">Track vehicle interventions, costs, and upcoming technical inspections.</p>
+            </header>
+            
+            <section class="module-card">
+                <h2 class="card-header" id="form-title">Log New Service Entry</h2>
+                <form id="maintenance-form" novalidate>
+                    <input type="hidden" id="maintenance-id">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="vehicle-id">Assigned Vehicle <span style="color: var(--brand-danger);">*</span></label>
+                            <select id="vehicle-id" class="form-control" required>
+                                <option value="" disabled selected>Select a vehicle...</option>
+                            </select>
+                            <span class="error-message" id="err-vehicle">Vehicle selection is mandatory.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service-type">Intervention Type <span style="color: var(--brand-danger);">*</span></label>
+                            <select id="service-type" class="form-control" required>
+                                <option value="" disabled selected>Select service type...</option>
+                                <option value="Oil Change">Oil Change</option>
+                                <option value="Filter Change">Filter Change</option>
+                                <option value="Revision">Revision</option>
+                                <option value="ITP">ITP</option>
+                                <option value="Brakes">Brakes</option>
+                                <option value="Battery">Battery</option>
+                                <option value="Distribution">Distribution</option>
+                            </select>
+                            <span class="error-message" id="err-type">Intervention type is required.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="service-date">Service Date <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="date" id="service-date" class="form-control" required>
+                            <span class="error-message" id="err-date">Valid service date is required.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cost">Total Cost (€) <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="number" id="cost" class="form-control" min="0.01" step="0.01" placeholder="0.00" required>
+                            <span class="error-message" id="err-cost">Cost must be a positive number.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="mileage">Mileage (km)</label>
+                            <input type="number" id="mileage" class="form-control" min="0" placeholder="e.g. 125000">
+                        </div>
+                        
+                        <div class="form-group full-width">
+                            <label for="notes">Notes & Observations</label>
+                            <textarea id="notes" class="form-control" rows="3" placeholder="Add specific parts replaced, mechanics observations, etc."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btn-cancel" class="btn" style="background: var(--bg-surface); color: var(--text-color); border: 1px solid var(--border-color);">Cancel</button>
+                        <button type="submit" id="btn-save" class="btn">Save Service</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="module-card">
+                <h2 class="card-header">Service History</h2>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Vehicle</th>
+                                <th>Intervention Type</th>
+                                <th>Date</th>
+                                <th>Cost</th>
+                                <th>Mileage</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maintenance-table-body">
+                            <tr><td colspan="8" style="text-align: center;">Loading data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/maintenance.js"></script>
+</body>
+</html>

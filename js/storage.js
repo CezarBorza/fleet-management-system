@@ -152,5 +152,65 @@ const DatabaseEngine = {
             console.error("Error deleting insurance:", err);
             throw err;
         }
+    },
+    // --- Maintenance Module ---
+    
+    getMaintenanceRecords: async () => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance')
+                .select('*')
+                .order('service_date', { ascending: false });
+            
+            if (error) throw error;
+            return data || [];
+        } catch (err) {
+            console.error("Error fetching maintenance records:", err);
+            throw err;
+        }
+    },
+
+    addMaintenanceRecord: async (payload) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance')
+                .insert([payload]);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error adding maintenance record:", err);
+            throw err;
+        }
+    },
+
+    updateMaintenanceRecord: async (id, payload) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance')
+                .update(payload)
+                .eq('id', id);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error updating maintenance record:", err);
+            throw err;
+        }
+    },
+
+    deleteMaintenanceRecord: async (id) => {
+        try {
+            const { data, error } = await supabaseClient
+                .from('maintenance')
+                .delete()
+                .eq('id', id);
+                
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error deleting maintenance record:", err);
+            throw err;
+        }
     }
 };
