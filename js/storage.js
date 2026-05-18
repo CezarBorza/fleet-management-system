@@ -7,10 +7,33 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const DatabaseEngine = {
-    // --- Authentication / Verification (Simulated for Frontend) ---
+    // --- Authentication / Verification (Supabase Auth Real) ---
     login: async (email, password) => {
-        // Normally we would use Auth here, but for this project level we are checking local validations
-        return email.length > 0 && password.length >= 8;
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+            if (error) throw error;
+            return { success: true, user: data.user };
+        } catch (err) {
+            console.error("Login error:", err.message);
+            return { success: false, message: err.message };
+        }
+    },
+
+    register: async (email, password) => {
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+            });
+            if (error) throw error;
+            return { success: true, user: data.user };
+        } catch (err) {
+            console.error("Register error:", err.message);
+            return { success: false, message: err.message };
+        }
     },
 
     // --- Vehicles ---
