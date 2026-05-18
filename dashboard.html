@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Dashboard and Module Template for AutoFleet Management System">
+    <meta name="theme-color" content="#ffffff">
+    
+    <title>Dashboard - AutoFleet Management</title>
+    
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-car-rear" aria-hidden="true"></i> AutoFleet</h2>
+        </div>
+        
+        <nav class="sidebar-nav" aria-label="Main Navigation">
+            <a href="dashboard.html" class="active" aria-current="page">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Dashboard
+            </a>
+            <a href="vehicles.html">
+                <i class="fa-solid fa-car" aria-hidden="true"></i> Vehicles
+            </a>
+            <a href="drivers.html">
+                <i class="fa-solid fa-users" aria-hidden="true"></i> Drivers
+            </a>
+            <a href="maintenance.html">
+                <i class="fa-solid fa-wrench" aria-hidden="true"></i> Maintenance
+            </a>
+            <a href="insurance.html">
+                <i class="fa-solid fa-file-shield" aria-hidden="true"></i> Insurance
+            </a>
+            <a href="vignette.html">
+                <i class="fa-solid fa-ticket" aria-hidden="true"></i> Vignettes
+            </a>
+            <a href="tires.html">
+                <i class="fa-solid fa-circle-dot" aria-hidden="true"></i> Tires
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="index.html" class="logout-link" aria-label="Log out of the application">
+                <i class="fa-solid fa-sign-out-alt" aria-hidden="true"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-navbar">
+            <button id="btn-toggle-menu" class="btn-icon" aria-label="Open sidebar menu" aria-expanded="false" aria-controls="sidebar">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            
+            <div class="navbar-actions">
+                <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+                <button class="user-profile" aria-label="User profile options">
+                    <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
+                    <span>System Admin</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="page-content" id="main-content" role="main">
+            
+            <header class="content-header">
+                <h1 class="page-title">Dashboard Overview</h1> 
+                <p class="text-muted page-subtitle">Real-time metrics and fleet operation statuses.</p>
+            </header>
+            
+            <section class="stats-grid" aria-label="Key Performance Indicators">
+                
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3 class="stat-title">Total Vehicles</h3>
+                        <div class="stat-number" id="lbl-total-vehicles" aria-live="polite">...</div>
+                    </div>
+                    <div class="stat-icon icon-blue" aria-hidden="true">
+                        <i class="fa-solid fa-car"></i>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3 class="stat-title">Active Drivers</h3>
+                        <div class="stat-number" id="lbl-total-drivers" aria-live="polite">0</div>
+                    </div>
+                    <div class="stat-icon icon-green" aria-hidden="true">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-info">
+                        <h3 class="stat-title">System Alerts</h3>
+                        <div class="stat-number" id="lbl-total-alerts" aria-live="polite">0</div>
+                    </div>
+                    <div class="stat-icon icon-red" aria-hidden="true">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </article>
+
+            </section>
+
+            <section class="alerts-section" aria-labelledby="alerts-heading">
+                <h2 id="alerts-heading" class="section-title">
+                    <i class="fa-solid fa-bell icon-orange" aria-hidden="true"></i> 
+                    Critical Notifications
+                </h2>
+                
+                <div id="alerts-container" class="alerts-container" aria-live="polite">
+                    <p id="lbl-no-alerts" class="text-muted empty-state-msg">
+                        No urgent notifications at this time.
+                    </p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/dashboard.js"></script> 
+</body>
+</html>
