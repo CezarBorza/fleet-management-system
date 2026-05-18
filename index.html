@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to the AutoFleet Management System">
+    <title>Login - AutoFleet Management</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="centered-layout">
+
+    <main class="login-container">
+        <header class="content-header" style="margin-bottom: 1.5rem;">
+            <h1><i class="fa-solid fa-car-rear" aria-hidden="true"></i> AutoFleet</h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Enter your credentials to access the system</p>
+        </header>
+
+        <form id="login-form" novalidate>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    class="form-control" 
+                    placeholder="admin@autofleet.com" 
+                    autocomplete="email" 
+                    aria-describedby="email-error"
+                    required
+                >
+                <span id="email-error" class="error-message" role="alert">Invalid email format.</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div style="position: relative;">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        class="form-control" 
+                        placeholder="••••••••" 
+                        autocomplete="current-password" 
+                        aria-describedby="password-error"
+                        style="padding-right: 2.5rem;"
+                        required
+                    >
+                    <button 
+                        type="button" 
+                        id="btn-toggle-password" 
+                        class="btn-icon" 
+                        aria-label="Toggle password visibility" 
+                        style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); font-size: 1rem;"
+                    >
+                        <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <span id="password-error" class="error-message" role="alert">Password must be at least 8 characters.</span>
+            </div>
+
+            <button type="submit" class="btn">Log In</button>
+        </form>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="js/storage.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>
