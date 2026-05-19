@@ -1,43 +1,25 @@
+
 let vehiclesState = [];
 let editingVehicleId = null;
 
 const vehicleForm = document.getElementById('vehicle-form');
 const formTitle = document.getElementById('form-title');
-const cancelEditBtn = document.getElementById('cancel-edit-btn');
+const btnCancel = document.getElementById('btn-cancel');
 const vehiclesTableBody = document.getElementById('vehicles-table-body');
-const searchInput = document.getElementById('search-input');
-const statusFilter = document.getElementById('status-filter');
 
-// Initialize view on load
 document.addEventListener('DOMContentLoaded', () => {
     fetchVehicles();
-    setupEventListeners();
-});
-
-/**
- * Setup Event Listeners for Forms, Search, and Filters
- */
-function setupEventListeners() {
-    // Form submission (Add / Edit)
+    
     if (vehicleForm) {
         vehicleForm.addEventListener('submit', handleFormSubmit);
     }
-
-    // Cancel edit state
-    if (cancelEditBtn) {
-        cancelEditBtn.addEventListener('click', resetForm);
+    if (btnCancel) {
+        btnCancel.addEventListener('click', resetForm);
     }
+    
+    hideAllErrors();
+});
 
-    // Real-time search implementation
-    if (searchInput) {
-        searchInput.addEventListener('input', filterAndRenderVehicles);
-    }
-
-    // Status filter dropdown implementation
-    if (statusFilter) {
-        statusFilter.addEventListener('change', filterAndRenderVehicles);
-    }
-}
 
 async function fetchVehicles() {
     try {
@@ -48,188 +30,179 @@ async function fetchVehicles() {
 
         if (error) throw error;
 
-        console.log("RAW DATA RECEIVED FROM SUPABASE:", data);
-
         vehiclesState = data || [];
-        filterAndRenderVehicles();
+        renderVehiclesTable(vehiclesState);
     } catch (error) {
         console.error("Error fetching vehicles:", error.message);
-        alert("Eroare la încărcarea vehiculelor: " + error.message);
     }
 }
 
-
-function filterAndRenderVehicles() {
-    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    const selectedStatus = statusFilter ? statusFilter.value : '';
-
-    const filtered = vehiclesState.filter(vehicle => {
-        const matchesSearch = 
-            vehicle.license_plate.toLowerCase().includes(query) ||
-            vehicle.make.toLowerCase().includes(query) ||
-            vehicle.model.toLowerCase().includes(query);
-
-        const matchesStatus = selectedStatus === '' || vehicle.status === selectedStatus;
-
-        return matchesSearch && matchesStatus;
-    });
-
-    renderVehiclesTable(filtered);
-}
 
 function renderVehiclesTable(data) {
     if (!vehiclesTableBody) return;
     vehiclesTableBody.innerHTML = '';
 
     if (data.length === 0) {
-        vehiclesTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Nu s-au găsit vehicule.</td></tr>`;
+        vehiclesTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Nu s-au găsit vehicule.</td></tr>`;
         return;
     }
 
     data.forEach(vehicle => {
+        let badgeClass = 'badge-archived';
+        if (vehicle.status === 'Activ') badgeClass = 'badge-success';
+        if (vehicle.status === 'În service') badgeClass = 'badge-warning';
+        if (vehicle.status === 'Indisponibil') badgeClass = 'badge-danger';
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td><strong>${escapeHtml(vehicle.license_plate)}</strong></td>
-            <td>${escapeHtml(vehicle.make)} ${escapeHtml(vehicle.model)}</td>
+            <td>${escapeHtml(vehicle.make)}</td>
+            <td>${escapeHtml(vehicle.model)}</td>
             <td>${vehicle.manufacture_year || '-'}</td>
             <td>${vehicle.mileage ? vehicle.mileage.toLocaleString() + ' km' : '0 km'}</td>
-            <td><span class="status-badge status-${vehicle.status.toLowerCase().replace(' ', '-')}">${escapeHtml(vehicle.status)}</span></td>
-            <td>${escapeHtml(vehicle.color || '-')}</td>
+            <td>${escapeHtml(vehicle.fuel_type || '-')}</td>
             <td>
-                <div class="actions-wrapper">
-                    <button class="btn-action btn-view" onclick="viewVehicleDetails(${vehicle.id})">Details</button>
-                    <button class="btn-action btn-edit" onclick="prepareEditVehicle(${vehicle.id})">Edit</button>
-                    <button class="btn-action btn-delete" onclick="deleteVehicle(${vehicle.id})">Delete</button>
-                </div>
+                <span class="badge ${badgeClass}">${escapeHtml(vehicle.status)}</span>
+            </td>
+            <td>
+                <button type="button" class="action-btn btn-view" title="View Details" onclick="viewVehicleDetails(${vehicle.id})">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+                <button type="button" class="action-btn btn-edit" title="Edit Vehicle" onclick="prepareEditVehicle(${vehicle.id})">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
+                <button type="button" class="action-btn btn-delete" title="Delete Vehicle" onclick="deleteVehicle(${vehicle.id})">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </td>
         `;
         vehiclesTableBody.appendChild(row);
     });
 }
 
+
+function hideAllErrors() {
+    const errorSpans = document.querySelectorAll('.error-message');
+    errorSpans.forEach(span => span.style.display = 'none');
+}
+
 async function validateVehicle(formData) {
-    // 1. Mandatory check fields cannot be empty
-    if (!formData.license_plate.trim()) return "Numărul de înmatriculare este obligatoriu.";
-    if (!formData.make.trim()) return "Marca vehiculului este obligatorie.";
-    if (!formData.model.trim()) return "Modelul vehiculului este obligatoriu.";
+    hideAllErrors();
+    let isValid = true;
 
-    const year = parseInt(formData.manufacture_year);
-    if (isNaN(year) || year < 1990 || year > 2026) {
-        return "Anul de fabricație trebuie să fie între 1990 și 2026.";
+    if (!formData.license_plate) {
+        document.getElementById('err-registration').style.display = 'block';
+        isValid = false;
     }
 
-    const mileage = parseInt(formData.mileage);
-    if (isNaN(mileage) || mileage < 0) {
-        return "Kilometrajul trebuie să fie un număr pozitiv.";
+    const year = formData.manufacture_year;
+    if (!year || year < 1990 || year > 2026) {
+        document.getElementById('err-year').style.display = 'block';
+        isValid = false;
     }
 
-    if (formData.vin && formData.vin.trim().length < 10) {
-        return "Codul VIN trebuie să conțină minim 10 caractere.";
+    const mileage = formData.mileage;
+    if (mileage < 0) {
+        document.getElementById('err-mileage').style.display = 'block';
+        isValid = false;
     }
 
-    const isUnique = await checkLicensePlateUniqueness(formData.license_plate, editingVehicleId);
-    if (!isUnique) {
-        return "Numărul de înmatriculare există deja în sistem.";
+    if (formData.vin && formData.vin.length > 0 && formData.vin.length < 10) {
+        document.getElementById('err-vin').style.display = 'block';
+        isValid = false;
     }
 
-    return null; 
+    if (isValid) {
+        const isUnique = await checkLicensePlateUniqueness(formData.license_plate, editingVehicleId);
+        if (!isUnique) {
+            const regError = document.getElementById('err-registration');
+            regError.innerText = "This registration number already exists.";
+            regError.style.display = 'block';
+            isValid = false;
+        }
+    }
+
+    return isValid;
 }
 
 async function checkLicensePlateUniqueness(plate, currentId) {
     let query = window.supabaseClient
         .from('vehicles')
         .select('id')
-        .eq('license_plate', plate.trim().toUpperCase());
+        .eq('license_plate', plate);
     
-    if (currentId) {
-        query = query.neq('id', currentId);
-    }
+    if (currentId) query = query.neq('id', currentId);
     
     const { data, error } = await query;
     if (error) return false;
     return data.length === 0;
 }
 
+
 async function handleFormSubmit(e) {
     e.preventDefault();
 
-    // Compile form input data structures
     const formData = {
-        license_plate: document.getElementById('input-license-plate').value.trim().toUpperCase(),
-        make: document.getElementById('input-make').value.trim(),
-        model: document.getElementById('input-model').value.trim(),
-        manufacture_year: parseInt(document.getElementById('input-year').value),
-        mileage: parseInt(document.getElementById('input-mileage').value) || 0,
-        vin: document.getElementById('input-vin').value.trim().toUpperCase(),
-        fuel_type: document.getElementById('input-fuel-type').value,
-        status: document.getElementById('input-status').value || 'Active',
-        color: document.getElementById('input-color').value.trim()
+        license_plate: document.getElementById('registration-number').value.trim().toUpperCase(),
+        make: document.getElementById('brand').value.trim(),
+        model: document.getElementById('model').value.trim(),
+        manufacture_year: parseInt(document.getElementById('year').value) || null,
+        mileage: parseInt(document.getElementById('mileage').value) || 0,
+        vin: document.getElementById('vin').value.trim().toUpperCase(),
+        fuel_type: document.getElementById('fuel-type').value,
+        status: document.getElementById('status').value || 'Activ',
+        color: document.getElementById('color').value.trim()
     };
 
-    // Evaluate business rules constraints validation
-    const validationError = await validateVehicle(formData);
-    if (validationError) {
-        alert(validationError);
-        return;
-    }
+    const isValid = await validateVehicle(formData);
+    if (!isValid) return;
 
     try {
         if (editingVehicleId) {
-            // Process UPDATE query action execution
             const { error } = await window.supabaseClient
                 .from('vehicles')
                 .update(formData)
                 .eq('id', editingVehicleId);
-
             if (error) throw error;
-            alert("Vehiculul a fost modificat cu succes!");
         } else {
-            // Process INSERT query action execution
             const { error } = await window.supabaseClient
                 .from('vehicles')
                 .insert([formData]);
-
             if (error) throw error;
-            alert("Vehiculul a fost adăugat cu succes!");
         }
 
         resetForm();
         fetchVehicles();
     } catch (error) {
         console.error("Database CRUD Error:", error.message);
-        alert("Eroare la salvarea datelor: " + error.message);
+        alert("Error saving vehicle: " + error.message);
     }
 }
 
-/**
- * Setup data mapping into form fields for processing updates
- */
+
 function prepareEditVehicle(id) {
     const vehicle = vehiclesState.find(v => v.id === id);
     if (!vehicle) return;
 
     editingVehicleId = id;
-    if (formTitle) formTitle.innerText = "Editare Vehicul";
-    if (cancelEditBtn) cancelEditBtn.style.display = "inline-block";
+    if (formTitle) formTitle.innerText = "Edit Vehicle";
+    if (btnCancel) btnCancel.style.display = "inline-flex"; 
 
-    // Inject parameters safely into structural view elements
-    document.getElementById('input-license-plate').value = vehicle.license_plate;
-    document.getElementById('input-make').value = vehicle.make;
-    document.getElementById('input-model').value = vehicle.model;
-    document.getElementById('input-year').value = vehicle.manufacture_year;
-    document.getElementById('input-mileage').value = vehicle.mileage;
-    document.getElementById('input-vin').value = vehicle.vin || '';
-    document.getElementById('input-fuel-type').value = vehicle.fuel_type || '';
-    document.getElementById('input-status').value = vehicle.status;
-    document.getElementById('input-color').value = vehicle.color || '';
-
+    document.getElementById('registration-number').value = vehicle.license_plate;
+    document.getElementById('brand').value = vehicle.make;
+    document.getElementById('model').value = vehicle.model;
+    document.getElementById('year').value = vehicle.manufacture_year || '';
+    document.getElementById('mileage').value = vehicle.mileage || '';
+    document.getElementById('vin').value = vehicle.vin || '';
+    document.getElementById('fuel-type').value = vehicle.fuel_type || '';
+    document.getElementById('status').value = vehicle.status || 'Activ';
+    document.getElementById('color').value = vehicle.color || '';
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 
 async function deleteVehicle(id) {
-    // Strict requirement validation prompt confirmation match pattern
     const confirmation = confirm("Sigur doriți să ștergeți vehiculul?");
     if (!confirmation) return;
 
@@ -241,43 +214,27 @@ async function deleteVehicle(id) {
 
         if (error) throw error;
 
-        alert("Vehiculul a fost șters din bază.");
         if (editingVehicleId === id) resetForm();
         fetchVehicles();
     } catch (error) {
-        console.error("Deletion query error encountered:", error.message);
-        alert("Eroare la ștergerea vehiculului: " + error.message);
+        console.error("Deletion query error:", error.message);
     }
 }
-
 
 function viewVehicleDetails(id) {
     const vehicle = vehiclesState.find(v => v.id === id);
     if (!vehicle) return;
-
-    const summaryDetails = `
-        DETALII VEHICUL:
-        ------------------------------------------
-        Număr Înmatriculare: ${vehicle.license_plate}
-        Marcă / Model: ${vehicle.make} ${vehicle.model}
-        An Fabricație: ${vehicle.manufacture_year || '-'}
-        Kilometraj: ${vehicle.mileage ? vehicle.mileage.toLocaleString() + ' km' : '0 km'}
-        Cod VIN: ${vehicle.vin || '-'}
-        Tip Combustibil: ${vehicle.fuel_type || '-'}
-        Culoare: ${vehicle.color || '-'}
-        Status Curent: ${vehicle.status}
-    `;
-    alert(summaryDetails);
+    alert(`Registration: ${vehicle.license_plate}\nBrand/Model: ${vehicle.make} ${vehicle.model}\nVIN: ${vehicle.vin || 'N/A'}`);
 }
-
 
 function resetForm() {
     editingVehicleId = null;
+    hideAllErrors();
     if (vehicleForm) vehicleForm.reset();
-    if (formTitle) formTitle.innerText = "Adăugare Vehicul";
-    if (cancelEditBtn) cancelEditBtn.style.display = "none";
+    if (formTitle) formTitle.innerText = "Add New Vehicle";
+    if (btnCancel) btnCancel.style.display = "none";
+    document.getElementById('err-registration').innerText = "Registration number is required."; 
 }
-
 
 function escapeHtml(string) {
     if (!string) return '';
