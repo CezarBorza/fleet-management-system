@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tire Management - AutoFleet System">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>Tires - AutoFleet Management</title>
+
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+
+        .module-card {
+            background-color: var(--bg-surface, #ffffff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            vertical-align: middle;
+        }
+
+        .data-table th {
+            font-weight: 600;
+            color: var(--text-muted, #6b7280);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-summer {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+
+        .badge-winter {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+
+        .badge-allseason {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+
+        .badge-warning {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        .btn-view {
+            color: #10b981;
+        }
+
+        .btn-edit {
+            color: #3b82f6;
+        }
+
+        .btn-delete {
+            color: #ef4444;
+        }
+
+        .btn-view:hover {
+            color: #059669;
+        }
+
+        .btn-edit:hover {
+            color: #2563eb;
+        }
+
+        .btn-delete:hover {
+            color: #dc2626;
+        }
+
+        .error-message {
+            display: none;
+            color: var(--brand-danger, #ef4444);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-header">
+        <h2>
+            <i class="fa-solid fa-car-rear"></i>
+            AutoFleet
+        </h2>
+    </div>
+
+    <nav class="sidebar-nav">
+
+        <a href="dashboard.html">
+            <i class="fa-solid fa-chart-pie"></i>
+            Dashboard
+        </a>
+
+        <a href="vehicles.html">
+            <i class="fa-solid fa-car"></i>
+            Vehicles
+        </a>
+
+        <a href="drivers.html">
+            <i class="fa-solid fa-users"></i>
+            Drivers
+        </a>
+
+        <a href="maintenance.html">
+            <i class="fa-solid fa-wrench"></i>
+            Maintenance
+        </a>
+
+        <a href="insurance.html">
+            <i class="fa-solid fa-file-shield"></i>
+            Insurance
+        </a>
+
+        <a href="vignette.html">
+            <i class="fa-solid fa-ticket"></i>
+            Vignettes
+        </a>
+
+        <a href="tires.html" class="active" aria-current="page">
+            <i class="fa-solid fa-circle-dot"></i>
+            Tires
+        </a>
+
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="index.html" class="logout-link">
+            <i class="fa-solid fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </div>
+
+</aside>
+
+<div class="main-wrapper">
+
+    <header class="top-navbar">
+
+        <button id="btn-toggle-menu" class="btn-icon">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <div class="navbar-actions">
+
+            <button id="btn-theme-toggle" class="btn-icon">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+
+            <button class="user-profile">
+                <i class="fa-solid fa-user-circle"></i>
+                <span>System Admin</span>
+            </button>
+
+        </div>
+
+    </header>
+
+    <main class="page-content">
+
+        <header class="content-header">
+
+            <h1>Tire Management</h1>
+
+            <p class="text-muted">
+                Manage vehicle tires, seasonal changes, and replacement history.
+            </p>
+
+        </header>
+
+        <!-- TIRE FORM -->
+        <section class="module-card">
+
+            <h2 class="card-header">
+                Add New Tire Set
+            </h2>
+
+            <form id="tire-form" novalidate>
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label for="vehicle">
+                            Vehicle
+                        </label>
+
+                        <select id="vehicle"
+                                class="form-control">
+
+                            <option value="">
+                                Select vehicle...
+                            </option>
+
+                            <option>HD-20-ABC - BMW X5</option>
+                            <option>B-101-XYZ - Audi A6</option>
+                            <option>CJ-55-DEF - Mercedes GLC</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="tire-type">
+                            Tire Type
+                            <span style="color: var(--brand-danger);">*</span>
+                        </label>
+
+                        <select id="tire-type"
+                                class="form-control"
+                                required>
+
+                            <option value="">
+                                Select type...
+                            </option>
+
+                            <option>Summer</option>
+                            <option>Winter</option>
+                            <option>All Season</option>
+
+                        </select>
+
+                        <span class="error-message">
+                                Tire type is required.
+                            </span>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="brand">
+                            Brand
+                        </label>
+
+                        <input type="text"
+                               id="brand"
+                               class="form-control"
+                               placeholder="Michelin">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="size">
+                            Tire Size
+                            <span style="color: var(--brand-danger);">*</span>
+                        </label>
+
+                        <input type="text"
+                               id="size"
+                               class="form-control"
+                               placeholder="225/45 R17"
+                               required>
+
+                        <span class="error-message">
+                                Tire size is mandatory.
+                            </span>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="installation-date">
+                            Installation Date
+                        </label>
+
+                        <input type="date"
+                               id="installation-date"
+                               class="form-control">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label for="change-date">
+                            Replacement Date
+                        </label>
+
+                        <input type="date"
+                               id="change-date"
+                               class="form-control">
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button type="button"
+                            class="btn"
+                            style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color);">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="btn">
+                        Save Tires
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- SEASONAL ALERTS -->
+        <section class="module-card">
+
+            <h2 class="card-header">
+                Seasonal Notifications
+            </h2>
+
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+
+                <div class="badge badge-warning">
+                    Winter tire replacement recommended for BMW X5
+                </div>
+
+                <div class="badge badge-warning">
+                    Summer tires should be mounted within 14 days
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- TIRE TABLE -->
+        <section class="module-card">
+
+            <h2 class="card-header">
+                Tire History
+            </h2>
+
+            <div class="table-responsive">
+
+                <table class="data-table">
+
+                    <thead>
+
+                    <tr>
+                        <th>Vehicle</th>
+                        <th>Type</th>
+                        <th>Brand</th>
+                        <th>Size</th>
+                        <th>Installation Date</th>
+                        <th>Replacement Date</th>
+                        <th>Actions</th>
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="tires-table-body">
+
+                    <tr>
+
+                        <td>HD-20-ABC</td>
+
+                        <td>
+                                    <span class="badge badge-winter">
+                                        Winter
+                                    </span>
+                        </td>
+
+                        <td>Michelin</td>
+                        <td>225/45 R17</td>
+                        <td>2025-11-01</td>
+                        <td>2026-03-20</td>
+
+                        <td>
+
+                            <button class="action-btn btn-view">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            <button class="action-btn btn-edit">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+
+                            <button class="action-btn btn-delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/storage.js"></script>
+<script src="js/main.js"></script>
+<script src="js/tires.js"></script>
+
+<script>
+
+    const isAuthenticated =
+        sessionStorage.getItem("is_authenticated");
+
+    if (!isAuthenticated) {
+        window.location.href = "index.html";
+    }
+
+</script>
+
+</body>
+</html>
