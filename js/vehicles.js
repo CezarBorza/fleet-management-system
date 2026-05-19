@@ -1,247 +1,262 @@
+"use strict";
 
-let vehiclesState = [];
-let editingVehicleId = null;
 
-const vehicleForm = document.getElementById('vehicle-form');
-const formTitle = document.getElementById('form-title');
-const btnCancel = document.getElementById('btn-cancel');
-const vehiclesTableBody = document.getElementById('vehicles-table-body');
+class VehiclesController {
+    constructor() {
+        this.form = document.getElementById("vehicle-form");
+        this.formTitle = document.getElementById("form-title");
+        this.idInput = document.getElementById("vehicle-id");
+        this.licensePlateInput = document.getElementById("registration-number");
+        this.makeInput = document.getElementById("brand");
+        this.modelInput = document.getElementById("model");
+        this.yearInput = document.getElementById("year");
+        this.mileageInput = document.getElementById("mileage");
+        this.vinInput = document.getElementById("vin");
+        this.fuelTypeInput = document.getElementById("fuel-type");
+        this.statusInput = document.getElementById("status");
+        this.colorInput = document.getElementById("color");
+        
+        this.btnCancel = document.getElementById("btn-cancel");
+        
+        this.tableBody = document.getElementById("vehicles-table-body");
+        this.searchInput = document.querySelector(".toolbar input[type='text']");
+        this.statusFilter = document.querySelector(".toolbar select:nth-of-type(1)");
+        this.fuelFilter = document.querySelector(".toolbar select:nth-of-type(2)");
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetchVehicles();
-    
-    if (vehicleForm) {
-        vehicleForm.addEventListener('submit', handleFormSubmit);
+        this.vehiclesList = [];
+
+        this.init();
     }
-    if (btnCancel) {
-        btnCancel.addEventListener('click', resetForm);
+
+    async init() {
+        if (sessionStorage.getItem("is_authenticated") !== "true") {
+            window.location.replace("index.html");
+            return;
+        }
+
+        this.bindEvents();
+        await this.loadVehicles();
     }
-    
-    hideAllErrors();
+
+    bindEvents() {
+        this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
+        this.btnCancel.addEventListener("click", this.resetForm.bind(this));
+        
+        if (this.searchInput) this.searchInput.addEventListener("input", this.filterAndRender.bind(this));
+        if (this.statusFilter) this.statusFilter.addEventListener("change", this.filterAndRender.bind(this));
+        if (this.fuelFilter) this.fuelFilter.addEventListener("change", this.filterAndRender.bind(this));
+    }
+
+
+    async loadVehicles() {
+        try {
+            const { data, error } = await window.supabaseClient
+                .from("vehicles")
+                .select("*")
+                .order("id", { ascending: false });
+
+            if (error) throw error;
+
+            this.vehiclesList = data || [];
+            this.filterAndRender();
+        } catch (error) {
+            console.error("Failed to load vehicles:", error);
+            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--brand-danger);">Failed to retrieve data from database.</td></tr>';
+        }
+    }
+
+
+    async validateForm() {
+        let isValid = true;
+        
+        const toggleError = (fieldId, show, message) => {
+            const el = document.getElementById(`err-${fieldId}`);
+            if (el) {
+                if (message) el.innerText = message;
+                el.style.display = show ? "block" : "none";
+            }
+            if (show) isValid = false;
+        };
+
+        ["registration", "year", "mileage", "vin"].forEach(id => toggleError(id, false));
+
+        const plateValue = this.licensePlateInput.value.trim().toUpperCase();
+        if (!plateValue) toggleError("registration", true);
+
+        const yearValue = parseInt(this.yearInput.value, 10);
+        if (isNaN(yearValue) || yearValue < 1990 || yearValue > 2026) toggleError("year", true);
+
+        const mileageValue = parseInt(this.mileageInput.value, 10);
+        if (isNaN(mileageValue) || mileageValue < 0) toggleError("mileage", true);
+
+        const vinValue = this.vinInput.value.trim();
+        if (vinValue && vinValue.length < 10) toggleError("vin", true);
+
+        if (isValid) {
+            const currentId = this.idInput.value;
+            let query = window.supabaseClient.from("vehicles").select("id").eq("license_plate", plateValue);
+            if (currentId) query = query.neq("id", currentId);
+            
+            const { data, error } = await query;
+            if (!error && data && data.length > 0) {
+                toggleError("registration", true, "This registration number already exists.");
+            }
+        }
+
+        return isValid;
+    }
+
+    async handleFormSubmit(event) {
+        event.preventDefault();
+
+        if (!(await this.validateForm())) return;
+
+        const payload = {
+            license_plate: this.licensePlateInput.value.trim().toUpperCase(),
+            make: this.makeInput.value.trim() || null,
+            model: this.modelInput.value.trim() || null,
+            manufacture_year: parseInt(this.yearInput.value, 10) || null,
+            mileage: parseInt(this.mileageInput.value, 10) || 0,
+            vin: this.vinInput.value.trim().toUpperCase() || null,
+            fuel_type: this.fuelTypeInput.value || null,
+            status: this.statusInput.value || "Activ",
+            color: this.colorInput.value.trim() || null
+        };
+
+        const id = this.idInput.value;
+
+        try {
+            if (id) {
+                const { error } = await window.supabaseClient.from("vehicles").update(payload).eq("id", id);
+                if (error) throw error;
+            } else {
+                const { error } = await window.supabaseClient.from("vehicles").insert([payload]);
+                if (error) throw error;
+            }
+            
+            this.resetForm();
+            await this.loadVehicles();
+        } catch (error) {
+            alert("Database Error: Could not save the vehicle record.");
+            console.error("SUPABASE ERROR:", error);
+        }
+    }
+
+   
+    getStatusBadgeHTML(status) {
+        let badgeClass = "badge-archived";
+        if (status === "Activ") badgeClass = "badge-success";
+        if (status === "În service") badgeClass = "badge-warning";
+        if (status === "Indisponibil") badgeClass = "badge-danger";
+
+        return `<span class="badge ${badgeClass}">${this.escapeHtml(status)}</span>`;
+    }
+
+    filterAndRender() {
+        this.tableBody.innerHTML = "";
+
+        const query = this.searchInput ? this.searchInput.value.toLowerCase().trim() : "";
+        const targetStatus = this.statusFilter ? this.statusFilter.value : "";
+        const targetFuel = this.fuelFilter ? this.fuelFilter.value : "";
+
+        const filtered = this.vehiclesList.filter(vehicle => {
+            const matchesSearch = 
+                (vehicle.license_plate && vehicle.license_plate.toLowerCase().includes(query)) ||
+                (vehicle.make && vehicle.make.toLowerCase().includes(query)) ||
+                (vehicle.model && vehicle.model.toLowerCase().includes(query));
+
+            const matchesStatus = !targetStatus || vehicle.status === targetStatus;
+            const matchesFuel = !targetFuel || vehicle.fuel_type === targetFuel;
+
+            return matchesSearch && matchesStatus && matchesFuel;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No vehicles found matching criteria.</td></tr>';
+            return;
+        }
+
+        filtered.forEach(record => {
+            const tr = document.createElement("tr");
+            const statusBadge = this.getStatusBadgeHTML(record.status);
+            const formattedMileage = record.mileage ? `${record.mileage.toLocaleString()} km` : '0 km';
+
+            tr.innerHTML = `
+                <td><strong>${this.escapeHtml(record.license_plate)}</strong></td>
+                <td>${this.escapeHtml(record.make || '-')}</td>
+                <td>${this.escapeHtml(record.model || '-')}</td>
+                <td>${record.manufacture_year || '-'}</td>
+                <td>${formattedMileage}</td>
+                <td>${this.escapeHtml(record.fuel_type || '-')}</td>
+                <td>${statusBadge}</td>
+                <td>
+                    <button class="action-btn btn-edit" onclick="vehiclesCtrl.editRecord('${record.id}')" aria-label="Edit Vehicle">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button class="action-btn btn-delete" onclick="vehiclesCtrl.deleteRecord('${record.id}')" aria-label="Delete Vehicle">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            this.tableBody.appendChild(tr);
+        });
+    }
+
+    editRecord(id) {
+        const record = this.vehiclesList.find(r => r.id == id);
+        if (!record) return;
+
+        this.formTitle.textContent = "Edit Vehicle Record";
+        this.idInput.value = record.id;
+        this.licensePlateInput.value = record.license_plate;
+        this.makeInput.value = record.make || "";
+        this.modelInput.value = record.model || "";
+        this.yearInput.value = record.manufacture_year || "";
+        this.mileageInput.value = record.mileage || "0";
+        this.vinInput.value = record.vin || "";
+        this.fuelTypeInput.value = record.fuel_type || "";
+        this.statusInput.value = record.status || "Activ";
+        this.colorInput.value = record.color || "";
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async deleteRecord(id) {
+        if (!confirm("Sigur doriți să ștergeți vehiculul?")) return;
+
+        try {
+            const { error } = await window.supabaseClient.from("vehicles").delete().eq("id", id);
+            if (error) throw error;
+            await this.loadVehicles();
+        } catch (error) {
+            alert("Database Error: Failed to delete the vehicle record.");
+            console.error("SUPABASE ERROR:", error);
+        }
+    }
+
+    resetForm() {
+        this.form.reset();
+        this.idInput.value = "";
+        this.formTitle.textContent = "Add New Vehicle";
+        
+        ["registration", "year", "mileage", "vin"].forEach(id => {
+            const el = document.getElementById(`err-${id}`);
+            if (el) el.style.display = "none";
+        });
+    }
+
+    escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+}
+
+let vehiclesCtrl;
+document.addEventListener("DOMContentLoaded", () => {
+    vehiclesCtrl = new VehiclesController();
 });
-
-
-async function fetchVehicles() {
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('vehicles')
-            .select('*')
-            .order('id', { ascending: false });
-
-        if (error) throw error;
-
-        vehiclesState = data || [];
-        renderVehiclesTable(vehiclesState);
-    } catch (error) {
-        console.error("Error fetching vehicles:", error.message);
-    }
-}
-
-
-function renderVehiclesTable(data) {
-    if (!vehiclesTableBody) return;
-    vehiclesTableBody.innerHTML = '';
-
-    if (data.length === 0) {
-        vehiclesTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center;">Nu s-au găsit vehicule.</td></tr>`;
-        return;
-    }
-
-    data.forEach(vehicle => {
-        let badgeClass = 'badge-archived';
-        if (vehicle.status === 'Activ') badgeClass = 'badge-success';
-        if (vehicle.status === 'În service') badgeClass = 'badge-warning';
-        if (vehicle.status === 'Indisponibil') badgeClass = 'badge-danger';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><strong>${escapeHtml(vehicle.license_plate)}</strong></td>
-            <td>${escapeHtml(vehicle.make)}</td>
-            <td>${escapeHtml(vehicle.model)}</td>
-            <td>${vehicle.manufacture_year || '-'}</td>
-            <td>${vehicle.mileage ? vehicle.mileage.toLocaleString() + ' km' : '0 km'}</td>
-            <td>${escapeHtml(vehicle.fuel_type || '-')}</td>
-            <td>
-                <span class="badge ${badgeClass}">${escapeHtml(vehicle.status)}</span>
-            </td>
-            <td>
-                <button type="button" class="action-btn btn-view" title="View Details" onclick="viewVehicleDetails(${vehicle.id})">
-                    <i class="fa-solid fa-eye"></i>
-                </button>
-                <button type="button" class="action-btn btn-edit" title="Edit Vehicle" onclick="prepareEditVehicle(${vehicle.id})">
-                    <i class="fa-solid fa-pen"></i>
-                </button>
-                <button type="button" class="action-btn btn-delete" title="Delete Vehicle" onclick="deleteVehicle(${vehicle.id})">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
-        `;
-        vehiclesTableBody.appendChild(row);
-    });
-}
-
-
-function hideAllErrors() {
-    const errorSpans = document.querySelectorAll('.error-message');
-    errorSpans.forEach(span => span.style.display = 'none');
-}
-
-async function validateVehicle(formData) {
-    hideAllErrors();
-    let isValid = true;
-
-    if (!formData.license_plate) {
-        document.getElementById('err-registration').style.display = 'block';
-        isValid = false;
-    }
-
-    const year = formData.manufacture_year;
-    if (!year || year < 1990 || year > 2026) {
-        document.getElementById('err-year').style.display = 'block';
-        isValid = false;
-    }
-
-    const mileage = formData.mileage;
-    if (mileage < 0) {
-        document.getElementById('err-mileage').style.display = 'block';
-        isValid = false;
-    }
-
-    if (formData.vin && formData.vin.length > 0 && formData.vin.length < 10) {
-        document.getElementById('err-vin').style.display = 'block';
-        isValid = false;
-    }
-
-    if (isValid) {
-        const isUnique = await checkLicensePlateUniqueness(formData.license_plate, editingVehicleId);
-        if (!isUnique) {
-            const regError = document.getElementById('err-registration');
-            regError.innerText = "This registration number already exists.";
-            regError.style.display = 'block';
-            isValid = false;
-        }
-    }
-
-    return isValid;
-}
-
-async function checkLicensePlateUniqueness(plate, currentId) {
-    let query = window.supabaseClient
-        .from('vehicles')
-        .select('id')
-        .eq('license_plate', plate);
-    
-    if (currentId) query = query.neq('id', currentId);
-    
-    const { data, error } = await query;
-    if (error) return false;
-    return data.length === 0;
-}
-
-
-async function handleFormSubmit(e) {
-    e.preventDefault();
-
-    const formData = {
-        license_plate: document.getElementById('registration-number').value.trim().toUpperCase(),
-        make: document.getElementById('brand').value.trim(),
-        model: document.getElementById('model').value.trim(),
-        manufacture_year: parseInt(document.getElementById('year').value) || null,
-        mileage: parseInt(document.getElementById('mileage').value) || 0,
-        vin: document.getElementById('vin').value.trim().toUpperCase(),
-        fuel_type: document.getElementById('fuel-type').value,
-        status: document.getElementById('status').value || 'Activ',
-        color: document.getElementById('color').value.trim()
-    };
-
-    const isValid = await validateVehicle(formData);
-    if (!isValid) return;
-
-    try {
-        if (editingVehicleId) {
-            const { error } = await window.supabaseClient
-                .from('vehicles')
-                .update(formData)
-                .eq('id', editingVehicleId);
-            if (error) throw error;
-        } else {
-            const { error } = await window.supabaseClient
-                .from('vehicles')
-                .insert([formData]);
-            if (error) throw error;
-        }
-
-        resetForm();
-        fetchVehicles();
-    } catch (error) {
-        console.error("Database CRUD Error:", error.message);
-        alert("Error saving vehicle: " + error.message);
-    }
-}
-
-
-function prepareEditVehicle(id) {
-    const vehicle = vehiclesState.find(v => v.id === id);
-    if (!vehicle) return;
-
-    editingVehicleId = id;
-    if (formTitle) formTitle.innerText = "Edit Vehicle";
-    if (btnCancel) btnCancel.style.display = "inline-flex"; 
-
-    document.getElementById('registration-number').value = vehicle.license_plate;
-    document.getElementById('brand').value = vehicle.make;
-    document.getElementById('model').value = vehicle.model;
-    document.getElementById('year').value = vehicle.manufacture_year || '';
-    document.getElementById('mileage').value = vehicle.mileage || '';
-    document.getElementById('vin').value = vehicle.vin || '';
-    document.getElementById('fuel-type').value = vehicle.fuel_type || '';
-    document.getElementById('status').value = vehicle.status || 'Activ';
-    document.getElementById('color').value = vehicle.color || '';
-
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-
-async function deleteVehicle(id) {
-    const confirmation = confirm("Sigur doriți să ștergeți vehiculul?");
-    if (!confirmation) return;
-
-    try {
-        const { error } = await window.supabaseClient
-            .from('vehicles')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw error;
-
-        if (editingVehicleId === id) resetForm();
-        fetchVehicles();
-    } catch (error) {
-        console.error("Deletion query error:", error.message);
-    }
-}
-
-function viewVehicleDetails(id) {
-    const vehicle = vehiclesState.find(v => v.id === id);
-    if (!vehicle) return;
-    alert(`Registration: ${vehicle.license_plate}\nBrand/Model: ${vehicle.make} ${vehicle.model}\nVIN: ${vehicle.vin || 'N/A'}`);
-}
-
-function resetForm() {
-    editingVehicleId = null;
-    hideAllErrors();
-    if (vehicleForm) vehicleForm.reset();
-    if (formTitle) formTitle.innerText = "Add New Vehicle";
-    if (btnCancel) btnCancel.style.display = "none";
-    document.getElementById('err-registration').innerText = "Registration number is required."; 
-}
-
-function escapeHtml(string) {
-    if (!string) return '';
-    return String(string)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
