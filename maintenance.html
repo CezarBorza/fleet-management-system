@@ -169,10 +169,22 @@
                 <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle dark mode">
                     <i class="fa-solid fa-moon" aria-hidden="true"></i>
                 </button>
-                <button class="user-profile" aria-label="User profile options">
-                    <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
-                    <span>System Admin</span>
-                </button>
+                
+                <div class="profile-dropdown-container" style="position: relative;">
+                    <button class="user-profile" id="btn-profile" aria-label="User profile options" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
+                        <span>System Admin</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; margin-left: 0.5rem;"></i>
+                    </button>
+                    
+                    <div class="profile-menu" id="profile-menu" role="menu">
+                        <div class="profile-menu-header">
+                            <strong style="font-size: 0.875rem;">System Admin</strong>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="nav-user-email">admin@autofleet.com</span>
+                        </div>
+                        <a href="settings.html" role="menuitem"><i class="fa-solid fa-user-gear"></i> Account Settings</a>
+                    </div>
+                </div>
             </div>
         </header>
 

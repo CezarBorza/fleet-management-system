@@ -212,5 +212,39 @@ const DatabaseEngine = {
             console.error("Error deleting maintenance record:", err);
             throw err;
         }
+    },
+
+    // --- User & Settings Module ---
+    
+    /**
+     * Retrieves the active user session data securely from Supabase
+     */
+    getCurrentUser: async () => {
+        try {
+            const { data: { user }, error } = await supabaseClient.auth.getUser();
+            if (error) throw error;
+            return user;
+        } catch (err) {
+            console.error("Error fetching current user:", err.message);
+            return null;
+        }
+    },
+
+    /**
+     * Updates the password for the currently authenticated user
+     * @param {string} newPassword 
+     */
+    updatePassword: async (newPassword) => {
+        try {
+            const { data, error } = await supabaseClient.auth.updateUser({
+                password: newPassword
+            });
+            
+            if (error) throw error;
+            return { success: true, data };
+        } catch (err) {
+            console.error("Error updating password:", err.message);
+            return { success: false, message: err.message };
+        }
     }
 };
