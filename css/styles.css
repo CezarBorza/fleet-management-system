@@ -270,3 +270,18 @@ body.centered-layout {
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   7. DESKTOP SIDEBAR COLLAPSE LOGIC
+   ========================================================================== */
+@media (min-width: 769px) {
+    .sidebar.is-collapsed {
+        transform: translateX(-100%);
+    }
+    
+    /* When sidebar is collapsed, expand the main wrapper to full width */
+    .sidebar.is-collapsed + .main-wrapper {
+        margin-left: 0;
+        width: 100%;
+    }
+}
