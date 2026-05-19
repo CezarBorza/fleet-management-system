@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Account Settings - AutoFleet Management System">
+    <meta name="theme-color" content="#ffffff">
+    
+    <title>Account Settings - AutoFleet Management</title>
+    
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+        .module-card {
+            background-color: var(--bg-surface, #ffffff);
+            border: 1px solid var(--border-color, #e5e7eb);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            max-width: 800px;
+        }
+
+        .card-header {
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border-color, #e5e7eb);
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-start;
+        }
+        
+        .btn-update {
+            max-width: 200px;
+        }
+
+        /* Read-only input styling */
+        input[readonly] {
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            border-color: var(--border-color);
+        }
+
+        .alert-success {
+            display: none;
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar" id="sidebar" aria-label="Sidebar Navigation">
+        <div class="sidebar-header">
+            <h2><i class="fa-solid fa-car-rear" aria-hidden="true"></i> AutoFleet</h2>
+        </div>
+        
+        <nav class="sidebar-nav" aria-label="Main Navigation">
+            <a href="dashboard.html">
+                <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Dashboard
+            </a>
+            <a href="vehicles.html">
+                <i class="fa-solid fa-car" aria-hidden="true"></i> Vehicles
+            </a>
+            <a href="drivers.html">
+                <i class="fa-solid fa-users" aria-hidden="true"></i> Drivers
+            </a>
+            <a href="maintenance.html">
+                <i class="fa-solid fa-wrench" aria-hidden="true"></i> Maintenance
+            </a>
+            <a href="insurance.html">
+                <i class="fa-solid fa-file-shield" aria-hidden="true"></i> Insurance
+            </a>
+            <a href="vignette.html">
+                <i class="fa-solid fa-ticket" aria-hidden="true"></i> Vignettes
+            </a>
+            <a href="tires.html">
+                <i class="fa-solid fa-circle-dot" aria-hidden="true"></i> Tires
+            </a>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="index.html" class="logout-link" aria-label="Log out of the application">
+                <i class="fa-solid fa-sign-out-alt" aria-hidden="true"></i> Logout
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-wrapper">
+        <header class="top-navbar">
+            <button id="btn-toggle-menu" class="btn-icon" aria-label="Open sidebar menu">
+                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+            </button>
+            
+            <div class="navbar-actions">
+                <button id="btn-theme-toggle" class="btn-icon" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon" aria-hidden="true"></i>
+                </button>
+                
+                <div class="profile-dropdown-container" style="position: relative;">
+                    <button class="user-profile" id="btn-profile" aria-label="User profile options" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa-solid fa-user-circle" aria-hidden="true"></i>
+                        <span>System Admin</span>
+                        <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; margin-left: 0.5rem;"></i>
+                    </button>
+                    
+                    <div class="profile-menu" id="profile-menu" role="menu">
+                        <div class="profile-menu-header">
+                            <strong style="font-size: 0.875rem;">System Admin</strong>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="nav-user-email">admin@autofleet.com</span>
+                        </div>
+                        <a href="settings.html" role="menuitem"><i class="fa-solid fa-user-gear"></i> Account Settings</a>
+                        <a href="#" role="menuitem" class="logout-link"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="page-content" id="main-content" role="main">
+            
+            <header class="content-header">
+                <h1>Account Settings</h1> 
+                <p class="text-muted">Manage your profile information and security preferences.</p>
+            </header>
+            
+            <section class="module-card">
+                <h2 class="card-header">Profile Information</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="current-email">Authenticated Email Address</label>
+                        <input type="email" id="current-email" class="form-control" value="Loading..." readonly aria-label="Your current email address">
+                        <p class="text-muted" style="font-size: 0.75rem; margin-top: 0.5rem;">
+                            <i class="fa-solid fa-circle-info"></i> Email address cannot be changed directly for security reasons.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="module-card">
+                <h2 class="card-header">Security & Password</h2>
+                
+                <div id="alert-success" class="alert-success" role="alert">
+                    <i class="fa-solid fa-circle-check"></i> Password has been successfully updated!
+                </div>
+
+                <form id="password-form" novalidate>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="new-password">New Password <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="password" id="new-password" class="form-control" placeholder="••••••••" required>
+                            <span class="error-message" id="err-password">Password must be at least 8 characters long.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="password" id="confirm-password" class="form-control" placeholder="••••••••" required>
+                            <span class="error-message" id="err-confirm">Passwords do not match.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="btn-save" class="btn btn-update">Update Password</button>
+                    </div>
+                </form>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

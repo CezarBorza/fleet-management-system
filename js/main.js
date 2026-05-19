@@ -70,5 +70,31 @@ document.addEventListener("DOMContentLoaded", () => {
             // The anchor's href attribute (index.html) will handle the redirect
         });
     }
+    
 
+    /* ==========================================================================
+       4. PROFILE DROPDOWN LOGIC
+       ========================================================================== */
+    const profileBtn = document.getElementById("btn-profile");
+    const profileMenu = document.getElementById("profile-menu");
+
+    if (profileBtn && profileMenu) {
+        // Deschide/Închide meniul la click pe buton
+        profileBtn.addEventListener("click", (e) => {
+            e.stopPropagation(); // Oprește click-ul din a se propaga în restul paginii
+            profileMenu.classList.toggle("is-active");
+            
+            // Actualizează atributele de accesibilitate pentru screen readere
+            const isExpanded = profileMenu.classList.contains("is-active");
+            profileBtn.setAttribute("aria-expanded", isExpanded);
+        });
+
+        // Închide meniul automat dacă dai click oriunde altundeva pe ecran
+        document.addEventListener("click", (e) => {
+            if (!profileMenu.contains(e.target)) {
+                profileMenu.classList.remove("is-active");
+                profileBtn.setAttribute("aria-expanded", "false");
+            }
+        });
+    }
 });
