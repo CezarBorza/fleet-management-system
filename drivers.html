@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Vehicle Management - AutoFleet System">
+    <meta name="description" content="Driver Management - AutoFleet System">
     <meta name="theme-color" content="#ffffff">
     
-    <title>Vehicles - AutoFleet Management</title>
+    <title>Drivers - AutoFleet Management</title>
     
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -58,14 +58,6 @@
             font-weight: 500;
         }
 
-        /* Toolbar Layout */
-        .toolbar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
         /* Data Table Styles */
         .table-responsive {
             overflow-x: auto;
@@ -104,21 +96,6 @@
         .badge-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
         .badge-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
         .badge-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
-        .badge-archived { background-color: rgba(107, 114, 128, 0.1); color: #6b7280; }
-
-        /* Action Buttons */
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1rem;
-            transition: color 0.2s;
-        }
-        .btn-edit { color: #3b82f6; }
-        .btn-edit:hover { color: #2563eb; }
-        .btn-delete { color: #ef4444; }
-        .btn-delete:hover { color: #dc2626; }
     </style>
 </head>
 <body>
@@ -132,10 +109,10 @@
             <a href="dashboard.html">
                 <i class="fa-solid fa-chart-pie" aria-hidden="true"></i> Dashboard
             </a>
-            <a href="vehicles.html" class="active" aria-current="page">
+            <a href="vehicles.html">
                 <i class="fa-solid fa-car" aria-hidden="true"></i> Vehicles
             </a>
-            <a href="drivers.html">
+            <a href="drivers.html" class="active" aria-current="page">
                 <i class="fa-solid fa-users" aria-hidden="true"></i> Drivers
             </a>
             <a href="maintenance.html">
@@ -191,124 +168,89 @@
         <main class="page-content" id="main-content" role="main">
             
             <header class="content-header">
-                <h1>Vehicle Management</h1>
-                <p class="text-muted">Manage fleet vehicles, data constraints, real-time lookups, and statuses.</p>
+                <h1>Driver Management</h1>
+                <p class="text-muted">Manage company drivers profiles, contact details, licensing, and assignments.</p>
             </header>
             
             <section class="module-card">
-                <h2 class="card-header" id="form-title">Add New Vehicle</h2>
-                <form id="vehicle-form" novalidate>
-                    <input type="hidden" id="vehicle-id">
+                <h2 class="card-header" id="form-title">Log New Driver Profile</h2>
+                <form id="driver-form" novalidate>
+                    <input type="hidden" id="driver-id">
 
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="registration-number">Registration Number <span style="color: var(--brand-danger);">*</span></label>
-                            <input type="text" id="registration-number" class="form-control" placeholder="e.g. HD-20-ABC" required>
-                            <span class="error-message" id="err-registration">Registration number is mandatory and must be unique.</span>
+                            <label for="first-name">First Name <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="text" id="first-name" class="form-control" placeholder="e.g. John" required>
+                            <span class="error-message" id="err-first-name">First name is a mandatory field.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="brand">Brand</label>
-                            <input type="text" id="brand" class="form-control" placeholder="e.g. BMW">
+                            <label for="last-name">Last Name <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="text" id="last-name" class="form-control" placeholder="e.g. Doe" required>
+                            <span class="error-message" id="err-last-name">Last name is a mandatory field.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="model">Model</label>
-                            <input type="text" id="model" class="form-control" placeholder="e.g. X5">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" placeholder="e.g. john.doe@fleet.com">
+                            <span class="error-message" id="err-email">Please input a valid email address structure.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="year">Year</label>
-                            <input type="number" id="year" class="form-control" min="1990" max="2026" placeholder="e.g. 2022">
-                            <span class="error-message" id="err-year">Year must be a value between 1990 and 2026.</span>
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="e.g. +40712345678">
+                            <span class="error-message" id="err-phone">Please enter a valid phone number.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="mileage">Mileage (km)</label>
-                            <input type="number" id="mileage" class="form-control" min="0" placeholder="e.g. 45000">
-                            <span class="error-message" id="err-mileage">Mileage metrics must represent a positive integer.</span>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="vin">VIN</label>
-                            <input type="text" id="vin" class="form-control" placeholder="Minimum 10 characters">
-                            <span class="error-message" id="err-vin">VIN must contain at least 10 characters.</span>
+                            <label for="license-number">License Number <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="text" id="license-number" class="form-control" placeholder="e.g. B00123456C" required>
+                            <span class="error-message" id="err-license">Driving license reference details are required.</span>
                         </div>
 
                         <div class="form-group">
-                            <label for="fuel-type">Fuel Type</label>
-                            <select id="fuel-type" class="form-control">
-                                <option value="">Select fuel type...</option>
-                                <option value="Petrol">Petrol</option>
-                                <option value="Diesel">Diesel</option>
-                                <option value="Hybrid">Hybrid</option>
-                                <option value="Electric">Electric</option>
+                            <label for="license-category">License Category</label>
+                            <input type="text" id="license-category" class="form-control" placeholder="e.g. B, C">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="expiration-date">License Expiration <span style="color: var(--brand-danger);">*</span></label>
+                            <input type="date" id="expiration-date" class="form-control" required>
+                            <span class="error-message" id="err-expiration">A valid license expiration date is required.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assigned-vehicle-id">Assigned Vehicle</label>
+                            <select id="assigned-vehicle-id" class="form-control">
+                                <option value="" selected>No vehicle assigned</option>
                             </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" class="form-control">
-                                <option value="Activ">Activ</option>
-                                <option value="În service">În service</option>
-                                <option value="Indisponibil">Indisponibil</option>
-                                <option value="Arhivat">Arhivat</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="color">Color</label>
-                            <input type="text" id="color" class="form-control" placeholder="e.g. Black">
                         </div>
                     </div>
 
                     <div class="form-actions">
                         <button type="button" id="btn-cancel" class="btn" style="background: var(--bg-surface); color: var(--text-color); border: 1px solid var(--border-color);">Cancel</button>
-                        <button type="submit" id="btn-save" class="btn">Save Vehicle</button>
+                        <button type="submit" id="btn-save" class="btn">Save Driver</button>
                     </div>
                 </form>
             </section>
 
             <section class="module-card">
-                <h2 class="card-header">Search & Filter</h2>
-                <div class="toolbar">
-                    <input type="text" class="form-control" placeholder="Search vehicle by number, brand, model...">
-                    
-                    <select class="form-control">
-                        <option value="">Filter by Status</option>
-                        <option value="Activ">Activ</option>
-                        <option value="În service">În service</option>
-                        <option value="Indisponibil">Indisponibil</option>
-                        <option value="Arhivat">Arhivat</option>
-                    </select>
-
-                    <select class="form-control">
-                        <option value="">Filter by Fuel Type</option>
-                        <option value="Petrol">Petrol</option>
-                        <option value="Diesel">Diesel</option>
-                        <option value="Hybrid">Hybrid</option>
-                        <option value="Electric">Electric</option>
-                    </select>
-                </div>
-            </section>
-
-            <section class="module-card">
-                <h2 class="card-header">Fleet Vehicles</h2>
+                <h2 class="card-header">Active Drivers Directory</h2>
                 <div class="table-responsive">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Registration</th>
-                                <th>Brand</th>
-                                <th>Model</th>
-                                <th>Year</th>
-                                <th>Mileage</th>
-                                <th>Fuel</th>
+                                <th>Driver Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>License Info</th>
+                                <th>Expiration Date</th>
+                                <th>Assigned Vehicle</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="vehicles-table-body">
+                        <tbody id="drivers-table-body">
                             <tr><td colspan="8" style="text-align: center;">Loading data...</td></tr>
                         </tbody>
                     </table>
@@ -322,6 +264,6 @@
     <script src="js/supabaseConfig.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/vehicles.js"></script>
+    <script src="js/drivers.js"></script>
 </body>
 </html>
