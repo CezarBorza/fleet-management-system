@@ -97,4 +97,34 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+    /* ==========================================================================
+       5. POPULATE GLOBAL NAV EMAIL
+       ========================================================================== */
+    const navEmailDisplay = document.getElementById("global-nav-user-email");
+    if (navEmailDisplay && sessionStorage.getItem("is_authenticated") === "true") {
+        // We use an IIFE (Immediately Invoked Function Expression) to handle the async call
+        (async () => {
+            try {
+                // Ensure DatabaseEngine is loaded before calling
+                if (typeof DatabaseEngine !== 'undefined') {
+                    const user = await DatabaseEngine.getCurrentUser();
+                    if (user && user.email) {
+                        navEmailDisplay.textContent = user.email;
+                    } else {
+                        navEmailDisplay.textContent = "Unknown User";
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to load user email for Navbar:", error);
+                navEmailDisplay.textContent = "Error";
+            }
+        })();
+    }
+
+
+
+
+
+
+
 });
