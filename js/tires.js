@@ -17,6 +17,8 @@ class TiresController {
         
         this.tableBody = document.getElementById("tires-table-body");
 
+        this.registrationSearch = document.getElementById("filter-registration");
+        this.brandSearch = document.getElementById("filter-brand");
         this.typeFilter = document.getElementById("filter-type");
         this.sizeSearch = document.getElementById("filter-size");
 
@@ -50,7 +52,7 @@ class TiresController {
         console.warn("Warning: Element id='btn-cancel' was not found on this page.");
     }
 
-    [this.typeFilter, this.sizeSearch].forEach(el => {
+    [this.typeFilter, this.sizeSearch, this.registrationSearch, this.brandSearch].forEach(el => {
             if (el) el.addEventListener("input", this.renderTable.bind(this));
         });
 }
@@ -175,14 +177,18 @@ class TiresController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
+        const registrationQuery = this.registrationSearch ? this.registrationSearch.value.toLowerCase().trim() : "";
+        const brandQuery = this.brandSearch ? this.brandSearch.value.toLowerCase().trim() : "";
         const typeQuery = this.typeFilter ? this.typeFilter.value : "";
         const sizeQuery = this.sizeSearch ? this.sizeSearch.value.toLowerCase().trim() : "";
 
         const filtered = this.tiresList.filter(record => {
             const matchesType = !typeQuery || record.tire_type === typeQuery;
             const matchesSize = (record.size || "").toLowerCase().includes(sizeQuery);
-            
-            return matchesType && matchesSize;
+            const matchesRegistration = (this.vehiclesMap[record.vehicle_id] || "").toLowerCase().includes(registrationQuery);
+            const matchesBrand = (record.brand || "").toLowerCase().includes(brandQuery);
+
+            return matchesType && matchesSize && matchesRegistration && matchesBrand;
         });
 
         if (filtered.length === 0) {

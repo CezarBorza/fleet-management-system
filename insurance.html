@@ -238,6 +238,25 @@
             </section>
 
             <section class="module-card">
+                <h2 class="card-header">Search & Filter</h2>
+                <div class="toolbar" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+
+                    <input type="text" id="filter-vehicle" class="form-control" placeholder="Search vehicle">
+                    
+                    <select id="filter-type" class="form-control">
+                        <option value="">All Insurance Types</option>
+                        <option value="RCA">RCA</option>
+                        <option value="CASCO">CASCO</option>
+                    </select>
+
+                    
+                    <input type="text" id="filter-provider" class="form-control" placeholder="Search provider">
+                    <input type="number" id="filter-min-cost" class="form-control" placeholder="Min Cost (€)">
+                    <input type="number" id="filter-max-cost" class="form-control" placeholder="Max Cost (€)">
+                </div>
+            </section>
+
+            <section class="module-card">
                 <h2 class="card-header">Active & Historical Policies</h2>
                 <div class="table-responsive">
                     <table class="data-table">
