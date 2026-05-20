@@ -19,9 +19,11 @@ class VehiclesController {
         this.btnCancel = document.getElementById("btn-cancel");
         
         this.tableBody = document.getElementById("vehicles-table-body");
-        this.searchInput = document.querySelector(".toolbar input[type='text']");
-        this.statusFilter = document.querySelector(".toolbar select:nth-of-type(1)");
-        this.fuelFilter = document.querySelector(".toolbar select:nth-of-type(2)");
+        this.regSearch = document.getElementById("search-reg");
+        this.brandSearch = document.getElementById("search-brand");
+        this.modelSearch = document.getElementById("search-model");
+        this.statusFilter = document.getElementById("filter-status");
+        this.fuelFilter = document.getElementById("filter-fuel");
 
         this.vehiclesList = [];
 
@@ -42,9 +44,13 @@ class VehiclesController {
         this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         this.btnCancel.addEventListener("click", this.resetForm.bind(this));
         
-        if (this.searchInput) this.searchInput.addEventListener("input", this.filterAndRender.bind(this));
-        if (this.statusFilter) this.statusFilter.addEventListener("change", this.filterAndRender.bind(this));
-        if (this.fuelFilter) this.fuelFilter.addEventListener("change", this.filterAndRender.bind(this));
+        [this.regSearch, this.brandSearch, this.modelSearch].forEach(el => {
+            if (el) el.addEventListener("input", this.filterAndRender.bind(this));
+        });
+
+        [this.statusFilter, this.fuelFilter].forEach(el => {
+            if (el) el.addEventListener("change", this.filterAndRender.bind(this));
+        });
     }
 
 
@@ -78,19 +84,28 @@ class VehiclesController {
             if (show) isValid = false;
         };
 
-        ["registration", "year", "mileage", "vin"].forEach(id => toggleError(id, false));
+        ["registration", "brand", "model", "year", "mileage", "vin", "fuel-type", "status", "color"].forEach(id => toggleError(id, false));
 
         const plateValue = this.licensePlateInput.value.trim().toUpperCase();
         if (!plateValue) toggleError("registration", true);
 
-        const yearValue = parseInt(this.yearInput.value, 10);
-        if (isNaN(yearValue) || yearValue < 1990 || yearValue > 2026) toggleError("year", true);
+        if (!this.makeInput.value.trim()) toggleError("brand", true);
+        if (!this.modelInput.value.trim()) toggleError("model", true);
 
         const mileageValue = parseInt(this.mileageInput.value, 10);
-        if (isNaN(mileageValue) || mileageValue < 0) toggleError("mileage", true);
+        if (isNaN(mileageValue) || mileageValue < 0) toggleError("mileage", true, "Mileage metrics must represent a positive integer.");
 
-        const vinValue = this.vinInput.value.trim();
-        if (vinValue && vinValue.length < 10) toggleError("vin", true);
+        let vinValue = this.vinInput.value.trim();
+        if (!vinValue || vinValue.length < 10) toggleError("vin", true, "VIN is mandatory and must contain at least 10 characters.");
+
+        vinValue = this.vinInput.value.trim();
+        if (!vinValue || vinValue.length < 10) toggleError("vin", true, "VIN is mandatory and must contain at least 10 characters.");
+
+        if (!this.fuelTypeInput.value) toggleError("fuel-type", true);
+        if (!this.statusInput.value) toggleError("status", true);
+        if (!this.colorInput.value.trim()) toggleError("color", true);
+        const yearValue = parseInt(this.yearInput.value, 10);
+        if (isNaN(yearValue) || yearValue < 1990 || yearValue > 2026) toggleError("year", true, "Year must be a value between 1990 and 2026.");
 
         if (isValid) {
             const currentId = this.idInput.value;
@@ -119,7 +134,7 @@ class VehiclesController {
             mileage: parseInt(this.mileageInput.value, 10) || 0,
             vin: this.vinInput.value.trim().toUpperCase() || null,
             fuel_type: this.fuelTypeInput.value || null,
-            status: this.statusInput.value || "Activ",
+            status: this.statusInput.value || "Active",
             color: this.colorInput.value.trim() || null
         };
 
@@ -145,62 +160,65 @@ class VehiclesController {
    
     getStatusBadgeHTML(status) {
         let badgeClass = "badge-archived";
-        if (status === "Activ") badgeClass = "badge-success";
-        if (status === "În service") badgeClass = "badge-warning";
-        if (status === "Indisponibil") badgeClass = "badge-danger";
+        if (status === "Active") badgeClass = "badge-success";
+        if (status === "In service") badgeClass = "badge-warning";
+        if (status === "Archived") badgeClass = "badge-warning";
+        if (status === "Unavailable") badgeClass = "badge-danger";  
 
         return `<span class="badge ${badgeClass}">${this.escapeHtml(status)}</span>`;
     }
 
     filterAndRender() {
-        this.tableBody.innerHTML = "";
+    this.tableBody.innerHTML = "";
 
-        const query = this.searchInput ? this.searchInput.value.toLowerCase().trim() : "";
-        const targetStatus = this.statusFilter ? this.statusFilter.value : "";
-        const targetFuel = this.fuelFilter ? this.fuelFilter.value : "";
+    const regQuery = this.regSearch ? this.regSearch.value.toLowerCase().trim() : "";
+    const brandQuery = this.brandSearch ? this.brandSearch.value.toLowerCase().trim() : "";
+    const modelQuery = this.modelSearch ? this.modelSearch.value.toLowerCase().trim() : "";
+    
+    const targetStatus = this.statusFilter ? this.statusFilter.value : "";
+    const targetFuel = this.fuelFilter ? this.fuelFilter.value : "";
 
-        const filtered = this.vehiclesList.filter(vehicle => {
-            const matchesSearch = 
-                (vehicle.license_plate && vehicle.license_plate.toLowerCase().includes(query)) ||
-                (vehicle.make && vehicle.make.toLowerCase().includes(query)) ||
-                (vehicle.model && vehicle.model.toLowerCase().includes(query));
+    const filtered = this.vehiclesList.filter(vehicle => {
+        const matchesReg = (vehicle.license_plate || "").toLowerCase().includes(regQuery);
+        const matchesBrand = (vehicle.make || "").toLowerCase().includes(brandQuery);
+        const matchesModel = (vehicle.model || "").toLowerCase().includes(modelQuery);
 
-            const matchesStatus = !targetStatus || vehicle.status === targetStatus;
-            const matchesFuel = !targetFuel || vehicle.fuel_type === targetFuel;
+        const matchesStatus = !targetStatus || vehicle.status === targetStatus;
+        const matchesFuel = !targetFuel || vehicle.fuel_type === targetFuel;
 
-            return matchesSearch && matchesStatus && matchesFuel;
-        });
+        return matchesReg && matchesBrand && matchesModel && matchesStatus && matchesFuel;
+    });
 
-        if (filtered.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No vehicles found matching criteria.</td></tr>';
-            return;
-        }
-
-        filtered.forEach(record => {
-            const tr = document.createElement("tr");
-            const statusBadge = this.getStatusBadgeHTML(record.status);
-            const formattedMileage = record.mileage ? `${record.mileage.toLocaleString()} km` : '0 km';
-
-            tr.innerHTML = `
-                <td><strong>${this.escapeHtml(record.license_plate)}</strong></td>
-                <td>${this.escapeHtml(record.make || '-')}</td>
-                <td>${this.escapeHtml(record.model || '-')}</td>
-                <td>${record.manufacture_year || '-'}</td>
-                <td>${formattedMileage}</td>
-                <td>${this.escapeHtml(record.fuel_type || '-')}</td>
-                <td>${statusBadge}</td>
-                <td>
-                    <button class="action-btn btn-edit" onclick="vehiclesCtrl.editRecord('${record.id}')" aria-label="Edit Vehicle">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button class="action-btn btn-delete" onclick="vehiclesCtrl.deleteRecord('${record.id}')" aria-label="Delete Vehicle">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </td>
-            `;
-            this.tableBody.appendChild(tr);
-        });
+    if (filtered.length === 0) {
+        this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No vehicles found matching criteria.</td></tr>';
+        return;
     }
+
+    filtered.forEach(record => {
+        const tr = document.createElement("tr");
+        const statusBadge = this.getStatusBadgeHTML(record.status);
+        const formattedMileage = record.mileage ? `${record.mileage.toLocaleString()} km` : '0 km';
+
+        tr.innerHTML = `
+            <td><strong>${this.escapeHtml(record.license_plate)}</strong></td>
+            <td>${this.escapeHtml(record.make || '-')}</td>
+            <td>${this.escapeHtml(record.model || '-')}</td>
+            <td>${record.manufacture_year || '-'}</td>
+            <td>${formattedMileage}</td>
+            <td>${this.escapeHtml(record.fuel_type || '-')}</td>
+            <td>${statusBadge}</td>
+            <td>
+                <button class="action-btn btn-edit" onclick="vehiclesCtrl.editRecord('${record.id}')" aria-label="Edit Vehicle">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button class="action-btn btn-delete" onclick="vehiclesCtrl.deleteRecord('${record.id}')" aria-label="Delete Vehicle">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        `;
+        this.tableBody.appendChild(tr);
+    });
+}
 
     editRecord(id) {
         const record = this.vehiclesList.find(r => r.id == id);
@@ -239,7 +257,7 @@ class VehiclesController {
         this.idInput.value = "";
         this.formTitle.textContent = "Add New Vehicle";
         
-        ["registration", "year", "mileage", "vin"].forEach(id => {
+        ["registration", "brand", "model", "year", "mileage", "vin", "fuel-type", "status", "color"].forEach(id => {
             const el = document.getElementById(`err-${id}`);
             if (el) el.style.display = "none";
         });

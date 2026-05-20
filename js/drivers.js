@@ -19,6 +19,10 @@ class DriversController {
         
         this.tableBody = document.getElementById("drivers-table-body");
 
+        this.nameSearch = document.getElementById("search-name");
+        this.emailSearch = document.getElementById("search-email");
+        this.licenseSearch = document.getElementById("search-license");
+
         this.vehiclesMap = {};
         this.driversList = [];
 
@@ -39,6 +43,10 @@ class DriversController {
     bindEvents() {
         if (this.form) this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         if (this.btnCancel) this.btnCancel.addEventListener("click", this.resetForm.bind(this));
+
+        [this.nameSearch, this.emailSearch, this.licenseSearch].forEach(input => {
+            if (input) input.addEventListener("input", this.renderTable.bind(this));
+        });
     }
 
 
@@ -100,14 +108,37 @@ class DriversController {
         if (!this.lastNameInput.value.trim()) toggleError("last-name", true);
         if (!this.licenseNumberInput.value.trim()) toggleError("license", true);
         if (!this.expirationDateInput.value) toggleError("expiration", true);
+        if (!this.licenseCategoryInput.value) toggleError("category", true);
+        else 
+            if(this.licenseCategoryInput.value.trim().toUpperCase() === "NULL" in ["A", "B",  "C", "D", "E"])
+                toggleError("category", true, "License category must be a valid class (A, B, C, D, E).");
 
         const emailValue = this.emailInput.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (emailValue && !emailRegex.test(emailValue)) toggleError("email", true);
+        if (!emailValue) {
+            toggleError("email", true, "Email address is a mandatory field.");
+        } else if (!emailRegex.test(emailValue)) {
+            toggleError("email", true, "Please input a valid email address structure.");
+        }
 
+        
         const phoneValue = this.phoneInput.value.trim();
         const phoneRegex = /^\+?[0-9\s\-]{7,15}$/;
-        if (phoneValue && !phoneRegex.test(phoneValue)) toggleError("phone", true);
+        if (!phoneValue) {
+            toggleError("phone", true, "Phone number is a mandatory field.");
+        } else if (!phoneRegex.test(phoneValue)) {
+            toggleError("phone", true, "Please enter a valid phone number.");
+        }
+
+        
+        const expDate = new Date(this.expirationDateInput.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+
+        if (expDate < today) {
+            toggleError("expiration", true, "License expiration date cannot be in the past.");
+        }
+        
 
         return isValid;
     }
@@ -157,9 +188,9 @@ class DriversController {
         const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (daysRemaining < 0) {
-            return `<span class="badge badge-danger">Permis Expirat</span>`;
+            return `<span class="badge badge-danger">Expired license</span>`;
         } else if (daysRemaining <= 30) {
-            return `<span class="badge badge-warning">Expiră în ${daysRemaining} zile</span>`;
+            return `<span class="badge badge-warning">Expiring in ${daysRemaining} days</span>`;
         }
 
         return `<span class="badge badge-success">Valid</span>`;
@@ -168,12 +199,30 @@ class DriversController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        if (this.driversList.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No drivers profiles documented.</td></tr>';
+        const query = this.searchInput ? this.searchInput.value.toLowerCase().trim() : "";
+
+        const nameQuery = this.nameSearch ? this.nameSearch.value.toLowerCase().trim() : "";
+        const emailQuery = this.emailSearch ? this.emailSearch.value.toLowerCase().trim() : "";
+        const licenseQuery = this.licenseSearch ? this.licenseSearch.value.toLowerCase().trim() : "";
+
+        const filtered = this.driversList.filter(driver => {
+            const fullName = `${driver.first_name} ${driver.last_name}`.toLowerCase();
+            const email = (driver.email || "").toLowerCase();
+            const license = (driver.license_number || "").toLowerCase();
+
+            const matchesName = fullName.includes(nameQuery);
+            const matchesEmail = email.includes(emailQuery);
+            const matchesLicense = license.includes(licenseQuery);
+
+            return matchesName && matchesEmail && matchesLicense;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No drivers found matching your search.</td></tr>';
             return;
         }
 
-        this.driversList.forEach(record => {
+        filtered.forEach(record => {
             const tr = document.createElement("tr");
             
             const fullName = `${record.first_name} ${record.last_name}`;
@@ -182,8 +231,8 @@ class DriversController {
 
             tr.innerHTML = `
                 <td><strong>${this.escapeHtml(fullName)}</strong></td>
-                <td>${this.escapeHtml(record.email || '-')}</td>
-                <td>${this.escapeHtml(record.phone || '-')}</td>
+                <td>${this.escapeHtml(record.email)}</td>
+                <td>${this.escapeHtml(record.phone)}</td>
                 <td>${this.escapeHtml(record.license_number)} (${this.escapeHtml(record.license_category || '-')})</td>
                 <td>${record.expiration_date}</td>
                 <td><span style="font-weight:600; color:var(--brand-primary);">${this.escapeHtml(vehiclePlate)}</span></td>

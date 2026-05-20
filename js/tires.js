@@ -17,6 +17,9 @@ class TiresController {
         
         this.tableBody = document.getElementById("tires-table-body");
 
+        this.typeFilter = document.getElementById("filter-type");
+        this.sizeSearch = document.getElementById("filter-size");
+
         this.vehiclesMap = {};
         this.tiresList = [];
 
@@ -46,6 +49,10 @@ class TiresController {
     } else {
         console.warn("Warning: Element id='btn-cancel' was not found on this page.");
     }
+
+    [this.typeFilter, this.sizeSearch].forEach(el => {
+            if (el) el.addEventListener("input", this.renderTable.bind(this));
+        });
 }
 
     async loadVehiclesLookup() {
@@ -98,11 +105,27 @@ class TiresController {
             if (show) isValid = false;
         };
 
-        ["vehicle", "type", "size"].forEach(id => toggleError(id, false));
+        ["vehicle", "type", "size", "mount-date", "replacement-date"].forEach(id => toggleError(id, false));
 
         if (!this.vehicleInput.value) toggleError("vehicle", true);
         if (!this.typeInput.value) toggleError("type", true);
         if (!this.sizeInput.value.trim()) toggleError("size", true);
+        if (!this.brandInput.value) toggleError("brand", true);
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (this.mountDateInput.value) {
+            const mountDate = new Date(this.mountDateInput.value);
+            if (mountDate > today) toggleError("mount-date", true);
+        }
+        else toggleError("mount-date", true);
+
+        if (this.replacementDateInput.value) {
+            const replacementDate = new Date(this.replacementDateInput.value);
+            if (replacementDate < today) toggleError("replacement-date", true);
+        }
+        else toggleError("replacement-date", true);
 
         return isValid;
     }
@@ -152,14 +175,23 @@ class TiresController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        if (this.tiresList.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No tire records discovered.</td></tr>';
+        const typeQuery = this.typeFilter ? this.typeFilter.value : "";
+        const sizeQuery = this.sizeSearch ? this.sizeSearch.value.toLowerCase().trim() : "";
+
+        const filtered = this.tiresList.filter(record => {
+            const matchesType = !typeQuery || record.tire_type === typeQuery;
+            const matchesSize = (record.size || "").toLowerCase().includes(sizeQuery);
+            
+            return matchesType && matchesSize;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No tire records match your criteria.</td></tr>';
             return;
         }
 
-        this.tiresList.forEach(record => {
+        filtered.forEach(record => {
             const tr = document.createElement("tr");
-            
             const vehiclePlate = this.vehiclesMap[record.vehicle_id] || `ID: ${record.vehicle_id}`;
             const typeBadge = this.calculateTypeBadgeHTML(record.tire_type);
 
@@ -171,12 +203,8 @@ class TiresController {
                 <td>${record.mount_date || '-'}</td>
                 <td>${record.replacement_date || '-'}</td>
                 <td>
-                    <button class="action-btn btn-edit" onclick="tiresCtrl.editRecord('${record.id}')" aria-label="Edit Tires Log">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button class="action-btn btn-delete" onclick="tiresCtrl.deleteRecord('${record.id}')" aria-label="Delete Tires Log">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="action-btn btn-edit" onclick="tiresCtrl.editRecord('${record.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="action-btn btn-delete" onclick="tiresCtrl.deleteRecord('${record.id}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             this.tableBody.appendChild(tr);
@@ -217,7 +245,7 @@ class TiresController {
         this.idInput.value = "";
         this.formTitle.textContent = "Log New Tire Setup Allocation";
         
-        ["vehicle", "type", "size"].forEach(id => {
+        ["vehicle", "type", "size", "mount-date", "replacement-date"].forEach(id => {
             const el = document.getElementById(`err-${id}`);
             if (el) el.style.display = "none";
         });
