@@ -1,13 +1,8 @@
 "use strict";
 
-/**
- * Maintenance Controller
- * Manages service logs, dynamic ITP/Revision alert notifications based on dates,
- * and handles database interactions securely.
- */
+
 class MaintenanceController {
     constructor() {
-        // Form Elements
         this.form = document.getElementById("maintenance-form");
         this.formTitle = document.getElementById("form-title");
         this.idInput = document.getElementById("maintenance-id");
@@ -20,10 +15,12 @@ class MaintenanceController {
         
         this.btnCancel = document.getElementById("btn-cancel");
         
-        // Table Elements
         this.tableBody = document.getElementById("maintenance-table-body");
 
-        // State Memory
+        this.typeSearch = document.getElementById("search-type"); 
+        this.minCostSearch = document.getElementById("search-min-cost");
+        this.maxCostSearch = document.getElementById("search-max-cost");
+
         this.vehiclesMap = {};
         this.maintenanceList = [];
 
@@ -31,7 +28,6 @@ class MaintenanceController {
     }
 
     async init() {
-        // Enforce Session Auth Guardrail
         if (sessionStorage.getItem("is_authenticated") !== "true") {
             window.location.replace("index.html");
             return;
@@ -45,11 +41,12 @@ class MaintenanceController {
     bindEvents() {
         this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         this.btnCancel.addEventListener("click", this.resetForm.bind(this));
+
+        [this.typeSearch, this.minCostSearch, this.maxCostSearch].forEach(el => {
+            if (el) el.addEventListener("input", this.renderTable.bind(this));
+        });
     }
 
-    /**
-     * Fetch vehicles to populate dropdown and mapping dictionary
-     */
     async loadVehicles() {
         try {
             const vehicles = await DatabaseEngine.getVehicles();
@@ -69,9 +66,6 @@ class MaintenanceController {
         }
     }
 
-    /**
-     * Fetch all maintenance records and render table
-     */
     async loadMaintenanceRecords() {
         try {
             this.maintenanceList = await DatabaseEngine.getMaintenanceRecords();
@@ -82,10 +76,6 @@ class MaintenanceController {
         }
     }
 
-    /**
-     * Front-End Form Validations
-     * @returns {boolean}
-     */
     validateForm() {
         let isValid = true;
         
@@ -95,16 +85,21 @@ class MaintenanceController {
             if (show) isValid = false;
         };
 
-        ['vehicle', 'type', 'date', 'cost'].forEach(id => toggleError(id, false));
+        ['vehicle', 'type', 'date', 'cost', 'mileage'].forEach(id => toggleError(id, false));
 
-        // 1. Check strict mandatory fields
         if (!this.vehicleInput.value) toggleError('vehicle', true);
         if (!this.typeInput.value) toggleError('type', true);
         if (!this.dateInput.value) toggleError('date', true);
 
-        // 2. Cost must be > 0
         const costValue = parseFloat(this.costInput.value);
         if (isNaN(costValue) || costValue <= 0) toggleError('cost', true);
+
+        const mileageValue = parseInt(this.mileageInput.value, 10);
+        if (!this.mileageInput.value.trim()) {
+            toggleError('mileage', true, "Mileage is a mandatory field.");
+        } else if (isNaN(mileageValue) || mileageValue < 0) {
+            toggleError('mileage', true, "Mileage metrics must represent a positive integer.");
+        }
 
         return isValid;
     }
@@ -114,7 +109,6 @@ class MaintenanceController {
 
         if (!this.validateForm()) return;
 
-        // Construct Database Payload mapping precisely to DB schema
         const payload = {
             vehicle_id: parseInt(this.vehicleInput.value, 10),
             service_type: this.typeInput.value,
@@ -141,45 +135,52 @@ class MaintenanceController {
         }
     }
 
-    /**
-     * Calculate context-aware alert badges based on type and time elapsed
-     */
+
     calculateStatusHTML(serviceType, serviceDateStr) {
         const serviceDate = new Date(serviceDateStr);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        // Calculate days elapsed since the service occurred
         const diffTime = today - serviceDate;
         const daysElapsed = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         if (serviceType === "ITP") {
             if (daysElapsed >= 365) {
                 return `<span class="badge badge-danger">ITP Expired</span>`;
-            } else if (daysElapsed >= 335) { // Within 30 days of expiring
+            } else if (daysElapsed >= 335) { 
                 return `<span class="badge badge-warning">ITP Due</span>`;
             }
         } else if (serviceType === "Revision" || serviceType === "Oil Change") {
-            if (daysElapsed >= 334) { // Approx 11 months threshold
+            if (daysElapsed >= 334) { 
                 return `<span class="badge badge-warning">Revision Due</span>`;
             }
         }
 
-        // Default state for recent/completed interventions
         return `<span class="badge badge-success">Completed</span>`;
     }
 
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        if (this.maintenanceList.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No service records found.</td></tr>';
+        const typeQuery = this.typeSearch ? this.typeSearch.value : ""; // Matches dropdown value
+        const minCost = this.minCostSearch ? parseFloat(this.minCostSearch.value) : 0;
+        const maxCost = this.maxCostSearch ? parseFloat(this.maxCostSearch.value) : Infinity;
+
+        const filtered = this.maintenanceList.filter(record => {
+            const matchesType = !typeQuery || record.service_type === typeQuery;
+            const matchesMin = isNaN(minCost) || record.cost >= minCost;
+            const matchesMax = isNaN(maxCost) || record.cost <= maxCost;
+            
+            return matchesType && matchesMin && matchesMax;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No matching service records found.</td></tr>';
             return;
         }
 
-        this.maintenanceList.forEach(record => {
+        filtered.forEach(record => {
             const tr = document.createElement("tr");
-            
             const vehiclePlate = this.vehiclesMap[record.vehicle_id] || `ID: ${record.vehicle_id}`;
             const statusBadge = this.calculateStatusHTML(record.service_type, record.service_date);
             const formattedMileage = record.mileage ? `${record.mileage.toLocaleString()} km` : '-';
@@ -246,7 +247,6 @@ class MaintenanceController {
     }
 }
 
-// Global Controller Instance
 let maintenanceCtrl;
 document.addEventListener("DOMContentLoaded", () => {
     maintenanceCtrl = new MaintenanceController();

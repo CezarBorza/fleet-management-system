@@ -13,113 +13,7 @@
     
     <link rel="stylesheet" href="css/styles.css">
 
-    <style>
-        .module-card {
-            background-color: var(--bg-surface, #ffffff);
-            border: 1px solid var(--border-color, #e5e7eb);
-            border-radius: 0.75rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-
-        .card-header {
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border-color, #e5e7eb);
-            font-size: 1.125rem;
-            font-weight: 600;
-        }
-
-        /* Form Grid Layout */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.25rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
-        /* Error messages */
-        .error-message {
-            display: none;
-            color: var(--brand-danger, #ef4444);
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            font-weight: 500;
-        }
-
-        /* Data Table Styles */
-        .table-responsive {
-            overflow-x: auto;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        .data-table th, .data-table td {
-            padding: 1rem;
-            border-bottom: 1px solid var(--border-color, #e5e7eb);
-            vertical-align: middle;
-        }
-
-        .data-table th {
-            font-weight: 600;
-            color: var(--text-muted, #6b7280);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-        }
-
-        .notes-column {
-            max-width: 250px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
-
-        /* Status Badges */
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-        .badge-success { background-color: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .badge-warning { background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .badge-danger { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        /* Action Buttons */
-        .action-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1rem;
-            transition: color 0.2s;
-        }
-        .btn-edit { color: #3b82f6; }
-        .btn-edit:hover { color: #2563eb; }
-        .btn-delete { color: #ef4444; }
-        .btn-delete:hover { color: #dc2626; }
-    </style>
+    
 </head>
 <body>
 
@@ -236,8 +130,9 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="mileage">Mileage (km)</label>
+                            <label for="mileage">Mileage (km) <span style="color: var(--brand-danger);">*</span></label>
                             <input type="number" id="mileage" class="form-control" min="0" placeholder="e.g. 125000">
+                            <span class="error-message" id="err-mileage">Mileage is a mandatory field.</span>
                         </div>
                         
                         <div class="form-group full-width">
@@ -251,6 +146,26 @@
                         <button type="submit" id="btn-save" class="btn">Save Service</button>
                     </div>
                 </form>
+            </section>
+
+            <section class="module-card">
+                <h2 class="card-header">Search & Filter</h2>
+                <div class="toolbar" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    
+                    <select id="search-type" class="form-control">
+                        <option value="">All Intervention Types</option>
+                        <option value="Oil Change">Oil Change</option>
+                        <option value="Filter Change">Filter Change</option>
+                        <option value="Revision">Revision</option>
+                        <option value="ITP">ITP</option>
+                        <option value="Brakes">Brakes</option>
+                        <option value="Battery">Battery</option>
+                        <option value="Distribution">Distribution</option>
+                    </select>
+
+                    <input type="number" id="search-min-cost" class="form-control" placeholder="Min Cost (€)">
+                    <input type="number" id="search-max-cost" class="form-control" placeholder="Max Cost (€)">
+                </div>
             </section>
 
             <section class="module-card">
