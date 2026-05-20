@@ -73,8 +73,10 @@
                     <div class="profile-menu" id="profile-menu" role="menu">
                         <div class="profile-menu-header">
                             <strong style="font-size: 0.875rem;">System Admin</strong>
+                            <span class="text-muted" style="font-size: 0.75rem;" id="global-nav-user-email">Loading...</span>
                         </div>
                         <a href="settings.html" role="menuitem"><i class="fa-solid fa-user-gear"></i> Account Settings</a>
+                        <a href="#" role="menuitem" class="logout-link"><i class="fa-solid fa-sign-out-alt"></i> Logout</a>
                     </div>
                 </div>
             </div>
@@ -83,8 +85,8 @@
         <main class="page-content" id="main-content" role="main">
             
             <header class="content-header">
-                <h1 class="page-title">Dashboard Overview</h1> 
-                <p class="text-muted page-subtitle">Real-time metrics and fleet operation statuses.</p>
+                <h1 class="page-title">AutoFleet Control Center</h1> 
+                <p class="text-muted page-subtitle">Real-time metrics, fleet statuses, and critical notifications.</p>
             </header>
             
             <section class="stats-grid" aria-label="Key Performance Indicators">
@@ -101,38 +103,53 @@
 
                 <article class="stat-card">
                     <div class="stat-info">
-                        <h3 class="stat-title">Active Drivers</h3>
-                        <div class="stat-number" id="lbl-total-drivers" aria-live="polite">0</div>
+                        <h3 class="stat-title">Expired Insurances</h3>
+                        <div class="stat-number" id="lbl-total-insurances" aria-live="polite">...</div>
                     </div>
-                    <div class="stat-icon icon-green" aria-hidden="true">
-                        <i class="fa-solid fa-users"></i>
+                    <div class="stat-icon icon-orange" aria-hidden="true">
+                        <i class="fa-solid fa-file-shield"></i>
                     </div>
                 </article>
 
                 <article class="stat-card">
                     <div class="stat-info">
-                        <h3 class="stat-title">System Alerts</h3>
-                        <div class="stat-number" id="lbl-total-alerts" aria-live="polite">0</div>
+                        <h3 class="stat-title">Vehicles In Service</h3>
+                        <div class="stat-number" id="lbl-total-service" aria-live="polite">...</div>
                     </div>
                     <div class="stat-icon icon-red" aria-hidden="true">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <i class="fa-solid fa-wrench"></i>
                     </div>
                 </article>
 
             </section>
 
-            <section class="alerts-section" aria-labelledby="alerts-heading">
-                <h2 id="alerts-heading" class="section-title">
-                    <i class="fa-solid fa-bell icon-orange" aria-hidden="true"></i> 
-                    Critical Notifications
-                </h2>
+            <div class="dashboard-grid">
                 
-                <div id="alerts-container" class="alerts-container" aria-live="polite">
-                    <p id="lbl-no-alerts" class="text-muted empty-state-msg">
-                        No urgent notifications at this time.
-                    </p>
-                </div>
-            </section>
+                <section class="fleet-status-card">
+                    <h2>Fleet Status</h2>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Serial Nr.</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fleet-table-body">
+                                <tr><td colspan="3" style="text-align: center;">Loading data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section class="alerts-feed-card">
+                    <h2><i class="fa-solid fa-bell" style="color: #f59e0b;"></i> Maintenance & Alerts</h2>
+                    <div id="alerts-container" class="alerts-container" aria-live="polite">
+                        </div>
+                </section>
+
+            </div>
 
         </main>
     </div>
