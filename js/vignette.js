@@ -1,12 +1,8 @@
 "use strict";
 
-/**
- * Vignette Controller
- * Manages the CRUD operations, UI validations, and state for the Vignette module.
- */
+
 class VignetteController {
     constructor() {
-        // Form Elements
         this.form = document.getElementById("vignette-form");
         this.formTitle = document.getElementById("form-title");
         this.idInput = document.getElementById("vignette-id");
@@ -17,10 +13,13 @@ class VignetteController {
         this.costInput = document.getElementById("cost");
         this.btnCancel = document.getElementById("btn-cancel");
         
-        // Table Elements
         this.tableBody = document.getElementById("vignettes-table-body");
 
-        // State memory
+        this.registrationSearch = document.getElementById("search-registration");
+        this.countrySearch = document.getElementById("search-country");
+        this.minCostSearch = document.getElementById("search-min-cost");
+        this.maxCostSearch = document.getElementById("search-max-cost");
+
         this.vehiclesMap = {}; 
         this.vignettesList = [];
 
@@ -41,6 +40,10 @@ class VignetteController {
     bindEvents() {
         this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         this.btnCancel.addEventListener("click", this.resetForm.bind(this));
+
+        [this.countrySearch, this.minCostSearch, this.maxCostSearch, this.registrationSearch].forEach(el => {
+            if (el) el.addEventListener("input", this.renderTable.bind(this));
+        });
     }
 
     async loadVehicles() {
@@ -109,7 +112,6 @@ class VignetteController {
         if (!this.validateForm()) return;
 
         const payload = {
-            // CORECTAT: Forțăm conversia în număr întreg (bigint) pentru Supabase
             vehicle_id: parseInt(this.vehicleInput.value, 10),
             country: this.countryInput.value.trim(),
             purchase_date: this.purchaseInput.value,
@@ -130,7 +132,6 @@ class VignetteController {
             await this.loadVignettes();
         } catch (error) {
             alert("An error occurred while saving the vignette.");
-            // Eroarea reală de la baza de date apare aici în consolă!
             console.error("SUPABASE ERROR:", error);
         }
     }
@@ -155,15 +156,28 @@ class VignetteController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        if (this.vignettesList.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No vignettes found.</td></tr>';
+        const registrationQuery = this.registrationSearch ? this.registrationSearch.value.toLowerCase().trim() : "";
+        const countryQuery = this.countrySearch ? this.countrySearch.value.toLowerCase().trim() : "";
+        const minCost = this.minCostSearch ? parseFloat(this.minCostSearch.value) : 0;
+        const maxCost = this.maxCostSearch ? parseFloat(this.maxCostSearch.value) : Infinity;
+
+        const filtered = this.vignettesList.filter(vign => {
+            const matchesRegistration = (this.vehiclesMap[vign.vehicle_id] || "").toLowerCase().includes(registrationQuery);
+            const matchesCountry = (vign.country || "").toLowerCase().includes(countryQuery);
+            const matchesMin = isNaN(minCost) || vign.cost >= minCost;
+            const matchesMax = isNaN(maxCost) || vign.cost <= maxCost;
+
+            return matchesRegistration && matchesCountry && matchesMin && matchesMax;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No vignettes match your search.</td></tr>';
             return;
         }
 
-        this.vignettesList.forEach(vign => {
+        filtered.forEach(vign => {
             const tr = document.createElement("tr");
-            
-            const vehiclePlate = this.vehiclesMap[vign.vehicle_id] || `Unknown (${vign.vehicle_id})`;
+            const vehiclePlate = this.vehiclesMap[vign.vehicle_id] || `ID: ${vign.vehicle_id}`;
             const statusBadge = this.calculateStatusHTML(vign.expiration_date); 
 
             tr.innerHTML = `
@@ -174,12 +188,8 @@ class VignetteController {
                 <td>€${parseFloat(vign.cost).toFixed(2)}</td>
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="action-btn btn-edit" onclick="vignetteCtrl.editRecord('${vign.id}')" aria-label="Edit">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button class="action-btn btn-delete" onclick="vignetteCtrl.deleteRecord('${vign.id}')" aria-label="Delete">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="action-btn btn-edit" onclick="vignetteCtrl.editRecord('${vign.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="action-btn btn-delete" onclick="vignetteCtrl.deleteRecord('${vign.id}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             this.tableBody.appendChild(tr);

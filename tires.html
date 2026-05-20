@@ -150,6 +150,9 @@
             <section class="module-card">
                 <h2 class="card-header">Search & Filter</h2>
                 <div class="toolbar" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+
+                    <input type="text" id="filter-registration" class="form-control" placeholder="Search by registration number">
+                    
                     
                     <select id="filter-type" class="form-control">
                         <option value="">All Tire Types</option>
@@ -157,7 +160,7 @@
                         <option value="Winter">Winter</option>
                         <option value="All Season">All Season</option>
                     </select>
-
+                    <input type="text" id="filter-brand" class="form-control" placeholder="Search by brand">
                     <input type="text" id="filter-size" class="form-control" placeholder="Search by size (e.g. 205/55 R16)...">
                 </div>
             </section>

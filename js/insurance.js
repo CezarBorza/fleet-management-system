@@ -1,13 +1,8 @@
 "use strict";
 
-/**
- * Insurance Controller
- * Handles the logic for managing RCA/CASCO records, validating strict dates,
- * parsing foreign keys securely, and computing expiration badges.
- */
+
 class InsuranceController {
     constructor() {
-        // Form Elements
         this.form = document.getElementById("insurance-form");
         this.formTitle = document.getElementById("form-title");
         this.idInput = document.getElementById("insurance-id");
@@ -20,18 +15,21 @@ class InsuranceController {
         
         this.btnCancel = document.getElementById("btn-cancel");
         
-        // Table Elements
         this.tableBody = document.getElementById("insurances-table-body");
 
-        // Application State
-        this.vehiclesMap = {}; // Lookup map for O(1) plate retrieval
+        this.vehicleSearch = document.getElementById("filter-vehicle");
+        this.typeFilter = document.getElementById("filter-type");
+        this.providerSearch = document.getElementById("filter-provider");
+        this.minCostSearch = document.getElementById("filter-min-cost");
+        this.maxCostSearch = document.getElementById("filter-max-cost");
+
+        this.vehiclesMap = {}; 
         this.insurancesList = [];
 
         this.init();
     }
 
     async init() {
-        // Enforce Session Auth Guardrail
         if (sessionStorage.getItem("is_authenticated") !== "true") {
             window.location.replace("index.html");
             return;
@@ -45,11 +43,12 @@ class InsuranceController {
     bindEvents() {
         this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         this.btnCancel.addEventListener("click", this.resetForm.bind(this));
+
+        [this.vehicleSearch, this.typeFilter, this.providerSearch, this.minCostSearch, this.maxCostSearch].forEach(el => {
+            if (el) el.addEventListener("input", this.renderTable.bind(this));
+        });
     }
 
-    /**
-     * Fetch vehicles to populate dropdown and memory map
-     */
     async loadVehicles() {
         try {
             const vehicles = await DatabaseEngine.getVehicles();
@@ -69,9 +68,6 @@ class InsuranceController {
         }
     }
 
-    /**
-     * Fetch all insurance records and render to table
-     */
     async loadInsurances() {
         try {
             this.insurancesList = await DatabaseEngine.getInsurances();
@@ -82,10 +78,7 @@ class InsuranceController {
         }
     }
 
-    /**
-     * Strict client-side validation logic
-     * @returns {boolean} true if valid, false otherwise
-     */
+
     validateForm() {
         let isValid = true;
         
@@ -97,20 +90,16 @@ class InsuranceController {
             if (show) isValid = false;
         };
 
-        // Reset all visual error states
         ['vehicle', 'type', 'provider', 'cost', 'start', 'expiration'].forEach(id => toggleError(id, false));
 
-        // 1. Mandatory Fields
         if (!this.vehicleInput.value) toggleError('vehicle', true);
         if (!this.typeInput.value) toggleError('type', true);
         if (!this.providerInput.value.trim()) toggleError('provider', true);
         if (!this.startInput.value) toggleError('start', true);
 
-        // 2. Cost strictly > 0
         const costValue = parseFloat(this.costInput.value);
         if (isNaN(costValue) || costValue <= 0) toggleError('cost', true);
 
-        // 3. Expiration strictly greater than start chronologically
         if (!this.expirationInput.value) {
             toggleError('expiration', true);
         } else if (this.startInput.value) {
@@ -130,9 +119,8 @@ class InsuranceController {
 
         if (!this.validateForm()) return;
 
-        // Construct Database Payload matching exact schema requirements
         const payload = {
-            vehicle_id: parseInt(this.vehicleInput.value, 10), // Explicit casting to prevent Postgres type conflicts
+            vehicle_id: parseInt(this.vehicleInput.value, 10), 
             insurance_type: this.typeInput.value,
             provider: this.providerInput.value.trim(),
             cost: parseFloat(this.costInput.value),
@@ -157,11 +145,7 @@ class InsuranceController {
         }
     }
 
-    /**
-     * Compute dynamic badge HTML based on a 30-day window
-     * @param {string} expirationDateStr 
-     * @returns {string} HTML span element
-     */
+
     calculateStatusHTML(expirationDateStr) {
         const today = new Date();
         today.setHours(0, 0, 0, 0); 
@@ -182,14 +166,29 @@ class InsuranceController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        if (this.insurancesList.length === 0) {
-            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No insurances found.</td></tr>';
+        const vehicleQuery = this.vehicleSearch ? this.vehicleSearch.value.toLowerCase().trim() : "";
+        const typeQuery = this.typeFilter ? this.typeFilter.value : "";
+        const providerQuery = this.providerSearch ? this.providerSearch.value.toLowerCase().trim() : "";
+        const minCost = this.minCostSearch ? parseFloat(this.minCostSearch.value) : 0;
+        const maxCost = this.maxCostSearch ? parseFloat(this.maxCostSearch.value) : Infinity;
+
+        const filtered = this.insurancesList.filter(ins => {
+            const matchesVehicle = !vehicleQuery || (this.vehiclesMap[ins.vehicle_id] || "").toLowerCase().includes(vehicleQuery);
+            const matchesType = !typeQuery || ins.insurance_type === typeQuery;
+            const matchesProvider = (ins.provider || "").toLowerCase().includes(providerQuery);
+            const matchesMin = isNaN(minCost) || ins.cost >= minCost;
+            const matchesMax = isNaN(maxCost) || ins.cost <= maxCost;
+            
+            return matchesVehicle && matchesType && matchesProvider && matchesMin && matchesMax;
+        });
+
+        if (filtered.length === 0) {
+            this.tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No policies found.</td></tr>';
             return;
         }
 
-        this.insurancesList.forEach(ins => {
+        filtered.forEach(ins => {
             const tr = document.createElement("tr");
-            
             const vehiclePlate = this.vehiclesMap[ins.vehicle_id] || `ID: ${ins.vehicle_id}`;
             const statusBadge = this.calculateStatusHTML(ins.expiration_date); 
 
@@ -202,12 +201,8 @@ class InsuranceController {
                 <td>${ins.expiration_date}</td> 
                 <td>${statusBadge}</td>
                 <td>
-                    <button class="action-btn btn-edit" onclick="insuranceCtrl.editRecord('${ins.id}')" aria-label="Edit Record">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </button>
-                    <button class="action-btn btn-delete" onclick="insuranceCtrl.deleteRecord('${ins.id}')" aria-label="Delete Record">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
+                    <button class="action-btn btn-edit" onclick="insuranceCtrl.editRecord('${ins.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="action-btn btn-delete" onclick="insuranceCtrl.deleteRecord('${ins.id}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
             `;
             this.tableBody.appendChild(tr);
@@ -247,7 +242,7 @@ class InsuranceController {
         this.idInput.value = "";
         this.formTitle.textContent = "Add New Insurance Policy";
         
-        // Hide all error messages immediately
+    
         ['vehicle', 'type', 'provider', 'cost', 'start', 'expiration'].forEach(id => {
             const errSpan = document.getElementById(`err-${id}`);
             if (errSpan) errSpan.style.display = "none";
@@ -255,7 +250,6 @@ class InsuranceController {
     }
 }
 
-// Global Controller Instance for inline table button actions
 let insuranceCtrl;
 document.addEventListener("DOMContentLoaded", () => {
     insuranceCtrl = new InsuranceController();

@@ -17,6 +17,7 @@ class MaintenanceController {
         
         this.tableBody = document.getElementById("maintenance-table-body");
 
+        this.vehicleSearch = document.getElementById("search-vehicle");
         this.typeSearch = document.getElementById("search-type"); 
         this.minCostSearch = document.getElementById("search-min-cost");
         this.maxCostSearch = document.getElementById("search-max-cost");
@@ -42,7 +43,7 @@ class MaintenanceController {
         this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         this.btnCancel.addEventListener("click", this.resetForm.bind(this));
 
-        [this.typeSearch, this.minCostSearch, this.maxCostSearch].forEach(el => {
+        [this.vehicleSearch, this.typeSearch, this.minCostSearch, this.maxCostSearch].forEach(el => {
             if (el) el.addEventListener("input", this.renderTable.bind(this));
         });
     }
@@ -162,16 +163,18 @@ class MaintenanceController {
     renderTable() {
         this.tableBody.innerHTML = "";
 
-        const typeQuery = this.typeSearch ? this.typeSearch.value : ""; // Matches dropdown value
+        const vehicleQuery = this.vehicleSearch ? this.vehicleSearch.value.toLowerCase().trim() : "";
+        const typeQuery = this.typeSearch ? this.typeSearch.value : ""; 
         const minCost = this.minCostSearch ? parseFloat(this.minCostSearch.value) : 0;
         const maxCost = this.maxCostSearch ? parseFloat(this.maxCostSearch.value) : Infinity;
 
         const filtered = this.maintenanceList.filter(record => {
+            const matchesVehicle = !vehicleQuery || (this.vehiclesMap[record.vehicle_id] || "").toLowerCase().includes(vehicleQuery);
             const matchesType = !typeQuery || record.service_type === typeQuery;
             const matchesMin = isNaN(minCost) || record.cost >= minCost;
             const matchesMax = isNaN(maxCost) || record.cost <= maxCost;
             
-            return matchesType && matchesMin && matchesMax;
+            return matchesVehicle && matchesType && matchesMin && matchesMax;
         });
 
         if (filtered.length === 0) {

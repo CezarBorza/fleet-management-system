@@ -18,7 +18,7 @@ class DriversController {
         this.btnCancel = document.getElementById("btn-cancel");
         
         this.tableBody = document.getElementById("drivers-table-body");
-
+        this.phoneSearch = document.getElementById("search-phone");
         this.nameSearch = document.getElementById("search-name");
         this.emailSearch = document.getElementById("search-email");
         this.licenseSearch = document.getElementById("search-license");
@@ -44,7 +44,7 @@ class DriversController {
         if (this.form) this.form.addEventListener("submit", this.handleFormSubmit.bind(this));
         if (this.btnCancel) this.btnCancel.addEventListener("click", this.resetForm.bind(this));
 
-        [this.nameSearch, this.emailSearch, this.licenseSearch].forEach(input => {
+        [this.nameSearch, this.emailSearch, this.licenseSearch, this.phoneSearch].forEach(input => {
             if (input) input.addEventListener("input", this.renderTable.bind(this));
         });
     }
@@ -201,6 +201,7 @@ class DriversController {
 
         const query = this.searchInput ? this.searchInput.value.toLowerCase().trim() : "";
 
+        const phoneQuery = this.phoneSearch ? this.phoneSearch.value.toLowerCase().trim() : "";
         const nameQuery = this.nameSearch ? this.nameSearch.value.toLowerCase().trim() : "";
         const emailQuery = this.emailSearch ? this.emailSearch.value.toLowerCase().trim() : "";
         const licenseQuery = this.licenseSearch ? this.licenseSearch.value.toLowerCase().trim() : "";
@@ -213,8 +214,9 @@ class DriversController {
             const matchesName = fullName.includes(nameQuery);
             const matchesEmail = email.includes(emailQuery);
             const matchesLicense = license.includes(licenseQuery);
+            const matchesPhone = (driver.phone || "").toLowerCase().includes(phoneQuery);
 
-            return matchesName && matchesEmail && matchesLicense;
+            return matchesName && matchesEmail && matchesLicense && matchesPhone;
         });
 
         if (filtered.length === 0) {
