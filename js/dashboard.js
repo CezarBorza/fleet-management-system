@@ -65,9 +65,15 @@ class DashboardController {
         }
 
         if (this.lblService) {
-            const inService = this.vehicles.filter(v => v.status === 'În service' || v.status === 'In Service').length;
-            this.lblService.textContent = inService;
-        }
+    const inService = this.vehicles.filter(v => {
+        // Convert status to lowercase for a case-insensitive comparison
+        const statusClar = (v.status || '').toLowerCase();
+        // Check if the status contains 'service', regardless of how it was typed in the database
+        return statusClar.includes('service'); 
+    }).length;
+    
+    this.lblService.textContent = inService;
+}
 
         if (this.lblInsurances) {
             const today = new Date();
@@ -76,7 +82,7 @@ class DashboardController {
             const expiredInsurances = this.insurances.filter(ins => {
                 const expDate = new Date(ins.expiration_date);
                 const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
-                return diffDays <= 30; // Captures both expired (< 0) and expiring soon
+                return diffDays < 0; // Captures expired (< 0) insurances.
             }).length;
             
             this.lblInsurances.textContent = expiredInsurances;
